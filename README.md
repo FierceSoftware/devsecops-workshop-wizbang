@@ -5,12 +5,13 @@
 - CloudBees Core
 - GitLab
 - Sonatype
-- Sonarqube
+- SonarQube
 - SysDig
+- RocketChat
 
 ## How to Use
 
-Fuck if I know.
+Fuck if I remember...
 
 1. Start with an OpenShift cluster with Logging/Metrics
 2. Deploy GitLab and IDM Servers by running ansible-playbooks
@@ -61,6 +62,7 @@ the easiest thing to do is just download the OpenShift plugins manually and inst
   - pipeline/workflow-aggrigator
   - openshift-sync
   - openshift-pipeline
+  - rocketchat
 
 - Next, set up some secrets and service accounts as described by the external Jenkins integration bit (should probably
   be run before deploying CJOC...)
