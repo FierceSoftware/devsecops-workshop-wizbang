@@ -1,0 +1,12 @@
+[submodule "openshift/openshift-sonatype-nexus"]
+	path = openshift/openshift-sonatype-nexus
+	url = https://github.com/FierceSoftware/openshift-sonatype-nexus
+[submodule "openshift/openshift-eclipse-che"]
+	path = openshift/openshift-eclipse-che
+	url = https://github.com/FierceSoftware/openshift-eclipse-che
+[submodule "openshift/openshift-rocketchat"]
+	path = openshift/openshift-rocketchat
+	url = https://github.com/FierceSoftware/openshift-rocketchat
+[submodule "openshift/openshift-sonarqube"]
+	path = openshift/openshift-sonarqube
+	url = https://github.com/FierceSoftware/openshift-sonarqube
