@@ -1,0 +1,94 @@
+# General vars
+certbot_email: kmoini@fiercesw.com
+workshop_prefix: fsw-dso
+workshop_domain: fiercesw.network
+
+route53_zone: DOMAIN_HERE
+route53_zone_id: DOMAIN_ID_HERE
+
+ssh_private_key_location: "~/Development/NotKeys/MasterKemoKey.pem"
+aws_key_name: NAME_OF_KEY
+aws_region: us-east-1
+aws_vpc_id: vpc-1234
+
+# Gitlab specific vars
+gitlab_hostname: gitlab
+gitlab_edition: "gitlab-ce"
+gitlab_version: ''
+gitlab_instance_type: m5.2xlarge
+gitlab_enable_letsencrypt: true
+gitlab_integrate_idm: true
+gitlab_server_pkgs:
+  - curl
+  - policycoreutils-python
+  - openssh-server
+  - openssl
+  - postfix
+  - tzdata
+  - nano
+  - wget
+  - firewalld
+
+# IdM specific vars
+idm_hostname: idm
+idm_instance_type: m5.xlarge
+idm_enable_letsencrypt: true
+idm_provision_users: true
+idm_provision_users_prefix: student-user
+idm_provision_users_suffix:
+idm_provision_users_start: 0
+idm_provision_users_count: 50
+idm_provision_users_password: studentPassword
+
+freeipa_server_admin_password: securePassword
+freeipa_server_ds_password: securePassword
+
+
+ansible_ssh_private_key_file: "{{ ssh_private_key_location }}"
+freeipa_server_domain: "{{ workshop_domain }}"
+freeipa_server_fqdn: "{{ idm_hostname }}.{{ workshop_domain }}"
+freeipa_server_ip: "{{ ansible_ssh_host }}"
+freeipa_server_realm: "{{ workshop_domain | upper }}"
+freeipa_server_manage_host: false
+freeipa_server_install_base_command: ipa-server-install --unattended
+cbd_shared_workspace: fswdso-shared
+freeipa_server_pkgs:
+  - bind
+  - bind-dyndb-ldap
+  - ipa-server
+  - ipa-server-common
+  - ipa-server-dns
+  - ipa-server-trust-ad
+  - krb5-devel
+  - "@Development tools"
+freeipa_server_pip_pkgs:
+  - custodia
+  - ipapython
+  - jwcrypto
+  - pyasn1-modules
+  - pyopenssl
+  - python-ldap
+freeipa_server_install_options:
+  - "--realm={{ freeipa_server_realm }}"
+  - "--domain={{ freeipa_server_domain }}"
+  - "--ds-password={{ freeipa_server_ds_password }}"
+  - "--admin-password={{ freeipa_server_admin_password }}"
+  - "--mkhomedir"
+  - "--hostname={{ freeipa_server_fqdn | default(ansible_fqdn) }}"
+  - "--no-ntp"
+#  - "--ip-address={{ freeipa_server_ip }}"
+#  - "--no-host-dns"
+#  - "--idstart=5000"
+#  - "--ssh-trust-dns"
+#  - "--no-dns"
+#  - "--setup-dns"
+#  - "--forwarder=8.8.8.8"
+#  - "--allow-zone-overlap"
+#  - "--ip-address={{ private_ip }}"
+#  - "--ip-address={{ ansible_ssh_host }}"
+#  - "--auto-forwarders"
+freeipa_base_dn: "DC={{ freeipa_server_domain.split('.') | join(',DC=') }}"
+
+gitlab_download_validate_certs: true
+gitlab_config_template: "gitlab.rb.j2"
+gitlab_generated_hostname: "{{ 'https' if gitlab_enable_letsencrypt else 'http' }}://{{ gitlab_hostname }}.{{ workshop_domain }}"

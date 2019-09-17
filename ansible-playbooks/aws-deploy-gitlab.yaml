@@ -1,0 +1,349 @@
+---
+- hosts: localhost
+  name: Deploy GitLab to AWS
+  gather_facts: false
+
+  tasks:
+
+  - name: Include the shared variables
+    include_vars:
+      file: deployer-vars.yaml
+
+  - name: Get facts about VPC
+    ec2_vpc_subnet_facts:
+      filters:
+        vpc-id: "{{ aws_vpc_id }}"
+        "tag:Network": "Public"
+    register: vpc_subnet_facts
+
+  - name: Create GitLab Security Group in the designated VPC
+    ec2_group:
+      vpc_id: "{{ aws_vpc_id }}"
+      region: "{{ aws_region }}"
+      name: "GitLab"
+      description: "SG for GitLab - Created by Ansible"
+      state: present
+      rules:
+      - proto: tcp
+        ports:
+        - 22
+        - 80
+        - 443
+        - 5000
+        - 5001
+        - 5005
+        cidr_ip: 0.0.0.0/0
+        rule_desc: For GitLab
+      - proto: udp
+        ports:
+        - 5000
+        - 5001
+        - 5005
+        cidr_ip: 0.0.0.0/0
+        rule_desc: For GitLab
+    register: sg_facts
+
+  - name: Create EC2 Instance
+    ec2:
+      key_name: "{{ aws_key_name }}"
+      instance_type: "{{ idm_instance_type }}"
+      # ami-0d70a070 = RHEL 7.5 in us-east-1
+      # ami-000db10762d0c4c05 = RHEL 7.6 in us-east-1
+      image: ami-000db10762d0c4c05
+      wait: yes
+      group_id: "{{ sg_facts.group_id }}"
+      exact_count: 1
+      vpc_subnet_id: "{{ vpc_subnet_facts.subnets.0.subnet_id }}"
+      assign_public_ip: yes
+      region: "{{ aws_region }}"
+      instance_tags:
+        Name: "fswdsoHost-gitlab-{{ workshop_prefix }}-{{ workshop_domain }}"
+        name: "fswdsoHost-gitlab-{{ workshop_prefix }}-{{ workshop_domain }}"
+        environment: "workshop"
+        workshop_group: "{{ workshop_prefix }}.{{ workshop_domain }}"
+        prefix: "fswdso-gitlab"
+      count_tag:
+        Name: "fswdsoHost-gitlab-{{ workshop_prefix }}-{{ workshop_domain }}"
+        name: "fswdsoHost-gitlab-{{ workshop_prefix }}-{{ workshop_domain }}"
+        environment: "workshop"
+        workshop_group: "{{ workshop_prefix }}.{{ workshop_domain }}"
+        prefix: "fswdso-gitlab"
+    register: ec2_facts
+
+  - name: dbg
+    debug:
+      msg: "{{ ec2_facts.tagged_instances.0 }}"
+
+  - name: Wait a couple minutes...
+    pause:
+      minutes: 2
+
+  - name: Add new instances to host group
+    add_host:
+      hostname: "{{ item.public_ip }}"
+      private_ip: "{{ item.private_ip  }}"
+      groupname: launched
+      ansible_ssh_private_key_file: "{{ ssh_private_key_location }}"
+      ansible_user: ec2-user
+      ansible_ssh_user: ec2-user
+      ansible_connection: ssh
+    with_items: "{{ ec2_facts.tagged_instances }}"
+
+  - name: Check for existing public matching R53 zones
+    route53_zone:
+      # TODO Replace with freeipa_domain
+      zone: "{{ workshop_domain }}"
+    register: hosted_zones
+
+  - name: Create Public R53 Zone if none exists
+    route53_zone:
+      # TODO Replace with freeipa_domain
+      zone: "{{ workshop_domain }}"
+      state: present
+      comment: "Public Workshop Zone created by Ansible playbook"
+    register: hosted_zones_new
+    when: hosted_zones.result == 0
+
+  - name: Set Public Zone ID - Created
+    set_fact:
+      pub_zone_id: "{{ hosted_zones_new.zone_id }}"
+    when: hosted_zones.result == 0
+
+  - name: Set Public Zone ID - Existing
+    set_fact:
+      pub_zone_id: "{{ hosted_zones.zone_id }}"
+    when: hosted_zones.result != 0
+
+  - name: Create record in public R53 zone - GitLab A
+    route53:
+      zone: "{{ workshop_domain }}"
+      state: present
+      hosted_zone_id: "{{ pub_zone_id }}"
+      private_zone: no
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "{{ gitlab_hostname }}.{{ workshop_domain }}"
+      type: A
+      value: "{{ item.public_ip }}"
+    with_items: "{{ ec2_facts.tagged_instances }}"
+
+  - name: Create record in public R53 zone - GitLab Subs A
+    route53:
+      zone: "{{ workshop_domain }}"
+      state: present
+      hosted_zone_id: "{{ pub_zone_id }}"
+      private_zone: no
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "*.{{ gitlab_hostname }}.{{ workshop_domain }}"
+      type: A
+      value: "{{ item.public_ip }}"
+    with_items: "{{ ec2_facts.tagged_instances }}"
+
+  - name: Create records in the private zone - GitLab A
+    route53:
+      state: present
+      # TODO Come back and set to the freeipa_domain when in  central var file
+      zone: "{{ workshop_domain }}"
+      private_zone: yes
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "{{ gitlab_hostname }}.{{ workshop_domain }}"
+      type: A
+      value: "{{ item.public_ip }}"
+    with_items: "{{ ec2_facts.tagged_instances }}"
+
+  - name: Create records in the private zone - GitLab Subs A
+    route53:
+      state: present
+      # TODO Come back and set to the freeipa_domain when in  central var file
+      zone: "{{ workshop_domain }}"
+      private_zone: yes
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "*.{{ gitlab_hostname }}.{{ workshop_domain }}"
+      type: A
+      value: "{{ item.public_ip }}"
+    with_items: "{{ ec2_facts.tagged_instances }}"
+
+  # Now that we have the AWS Environment set up, dig into the actual server...
+
+- name: Play 2 - Set up RH Identity Management Server (freeipa-server)
+  hosts: launched
+  become: True
+  vars:
+  - ansible_user: ec2-user
+  - ansible_ssh_user: ec2-user
+  - ansible_connection: ssh
+  - ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+  - host_key_checking: False
+  gather_facts: True
+
+  tasks:
+
+  - name: Include the shared variables
+    include_vars:
+      file: deployer-vars.yaml
+
+  - name: Include OS-specific variables.
+    include_vars: "gitlab-{{ ansible_os_family }}.yml"
+
+  - name: Wait for SSH to come up
+    wait_for_connection:
+      delay: 10
+      timeout: 180
+
+  - name: Connect to new EC2 instance and set hostname
+    hostname:
+      name: "{{ gitlab_hostname }}.{{ workshop_domain }}"
+
+  - name: Set /etc/hosts file
+    copy:
+      dest: "/etc/hosts"
+      content: |
+        127.0.0.1 localhost localdomain
+        {{ ansible_ssh_host }} {{ gitlab_hostname }}.{{ workshop_domain }} {{ workshop_domain }}
+
+  - name: Do some AWS hostname preservation
+    lineinfile:
+      path: /etc/cloud/cloud.cfg
+      regexp: '^preserve_hostname'
+      line: "preserve_hostname: true"
+
+  - name: Update base packages
+    yum:
+      name: "*"
+      state: latest
+      update_cache: yes
+    register: update_task_result
+
+  - name: Reboot immediately if there were new packages installed
+    shell: "sleep 5 && reboot"
+    async: 1
+    poll: 0
+    when: update_task_result is changed
+
+  - name: Wait for the reboot to complete if there were new packages installed
+    wait_for_connection:
+      connect_timeout: 20
+      sleep: 5
+      delay: 5
+      timeout: 300
+    when: update_task_result is changed
+
+  - name: Install GitLab server packages
+    yum:
+      name: "{{ gitlab_server_pkgs }}"
+      state: present
+    delay: 10
+    register: result
+    retries: 3
+    until: result is succeeded
+
+  - name: Start firewalld
+    service:
+      name: firewalld
+      state: started
+      enabled: true
+
+  - name: Set firewall
+    firewalld:
+      permanent: yes
+      immediate: yes
+      state: enabled
+      service: "{{ item }}"
+    with_items:
+     - https
+     - http
+
+  - name: Set firewall for port 5000
+    firewalld:
+      permanent: yes
+      immediate: yes
+      state: enabled
+      port: 5000/tcp
+
+  - name: Set firewall for port 5001
+    firewalld:
+      permanent: yes
+      immediate: yes
+      state: enabled
+      port: 5001/tcp
+
+  - name: Set firewall for port 5005
+    firewalld:
+      permanent: yes
+      immediate: yes
+      state: enabled
+      port: 5005/tcp
+
+  - name: Check if GitLab configuration file already exists.
+    stat: path=/etc/gitlab/gitlab.rb
+    register: gitlab_config_file
+
+  - name: Check if GitLab is already installed.
+    stat: path=/usr/bin/gitlab-ctl
+    register: gitlab_file
+
+  - name: Download GitLab repository installation script.
+    get_url:
+      url: "{{ gitlab_repository_installation_script_url }}"
+      dest: /tmp/gitlab_install_repository.sh
+      validate_certs: "{{ gitlab_download_validate_certs }}"
+    when: not gitlab_file.stat.exists
+
+  - name: Install GitLab repository.
+    command: bash /tmp/gitlab_install_repository.sh
+    when: not gitlab_file.stat.exists
+
+  - name: Define the Gitlab package name.
+    set_fact:
+      gitlab_package_name: "{{ gitlab_edition }}{{ gitlab_package_version_separator }}{{ gitlab_version }}"
+    when: gitlab_version != ''
+
+  - name: Install GitLab
+    package:
+      name: "{{ gitlab_package_name | default(gitlab_edition) }}"
+      state: present
+    when: not gitlab_file.stat.exists
+    environment:
+      EXTERNAL_URL: "{{ gitlab_generated_hostname }}"
+
+  - name: Copy GitLab configuration file.
+    template:
+      src: "{{ gitlab_config_template }}"
+      dest: /etc/gitlab/gitlab.rb
+      owner: root
+      group: root
+      mode: 0600
+    notify: restart gitlab
+
+  #- name: Force restart of gitlab
+  #  meta: flush_handlers
+
+  
+
+  # Start and configure GitLab. Sometimes the first run fails, but after that,
+  # restarts fix problems, so ignore failures on this run.
+  #- name: Reconfigure GitLab (first run).
+  #  command: >
+  #    gitlab-ctl reconfigure
+  #    creates=/var/opt/gitlab/bootstrapped
+  #  failed_when: false
+
+  handlers:
+
+  - name: restart gitlab
+    command: gitlab-ctl reconfigure
+    register: gitlab_restart
+    failed_when: false
+
+
+
+  #- name: Post-install configuration
+  #- name: Connect to IdM
+  #- name: Clone repos to student user accounts

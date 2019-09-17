@@ -1,0 +1,636 @@
+---
+- hosts: localhost
+  name: Deploy Red Hat Identity Management to AWS
+  gather_facts: false
+
+  tasks:
+
+  - name: Include the shared variables
+    include_vars:
+      file: deployer-vars.yaml
+
+  - name: Get facts about VPC
+    ec2_vpc_subnet_facts:
+      filters:
+        vpc-id: "{{ aws_vpc_id }}"
+        "tag:Network": "Public"
+    register: vpc_subnet_facts
+
+  - name: Create IDM Security Group in the designated VPC
+    ec2_group:
+      vpc_id: "{{ aws_vpc_id }}"
+      region: "{{ aws_region }}"
+      name: "RH-IDM"
+      description: "SG for Red Hat Identity Management - Created by Ansible"
+      state: present
+      rules:
+      - proto: tcp
+        ports:
+        - 22
+        - 80
+        - 443
+        - 389
+        - 636
+        - 88
+        - 464
+        - 53
+        - 8080
+        cidr_ip: 0.0.0.0/0
+        rule_desc: For IDM
+      - proto: udp
+        ports:
+        - 88
+        - 464
+        - 53
+        cidr_ip: 0.0.0.0/0
+        rule_desc: For IDM
+    register: sg_facts
+
+  - name: Create EC2 Instance
+    ec2:
+      key_name: "{{ aws_key_name }}"
+      instance_type: "{{ idm_instance_type }}"
+      # ami-0d70a070 = RHEL 7.5 in us-east-1
+      # ami-000db10762d0c4c05 = RHEL 7.6 in us-east-1
+      image: ami-0d70a070
+      wait: yes
+      group_id: "{{ sg_facts.group_id }}"
+      exact_count: 1
+      vpc_subnet_id: "{{ vpc_subnet_facts.subnets.0.subnet_id }}"
+      assign_public_ip: yes
+      region: "{{ aws_region }}"
+      instance_tags:
+        Name: "fswdsoHost-rhIDM-{{ workshop_prefix }}-{{ workshop_domain }}"
+        name: "fswdsoHost-rhIDM-{{ workshop_prefix }}-{{ workshop_domain }}"
+        environment: "workshop"
+        workshop_group: "{{ workshop_prefix }}.{{ workshop_domain }}"
+        prefix: "fswdso-rhidm"
+      count_tag:
+        Name: "fswdsoHost-rhIDM-{{ workshop_prefix }}-{{ workshop_domain }}"
+        name: "fswdsoHost-rhIDM-{{ workshop_prefix }}-{{ workshop_domain }}"
+        environment: "workshop"
+        workshop_group: "{{ workshop_prefix }}.{{ workshop_domain }}"
+        prefix: "fswdso-rhidm"
+    register: ec2_facts
+
+  - name: dbg
+    debug:
+      msg: "{{ ec2_facts.tagged_instances.0 }}"
+
+  - name: Wait a couple minutes...
+    pause:
+      minutes: 2
+
+  - name: Add new instances to host group
+    add_host:
+      hostname: "{{ item.public_ip }}"
+      private_ip: "{{ item.private_ip  }}"
+      groupname: launched
+      ansible_ssh_private_key_file: "{{ ssh_private_key_location }}"
+      ansible_user: ec2-user
+      ansible_ssh_user: ec2-user
+      ansible_connection: ssh
+    with_items: "{{ ec2_facts.tagged_instances }}"
+
+  - name: Set Reverse fact
+    set_fact:
+      reverse_dns_zone: "{{ item.private_ip.split('.')[0:2] | join('.') | ipaddr('revdns') }}"
+      reverse_dns_zone_record: "{{ item.private_ip | ipaddr('revdns') }}"
+    with_items: "{{ ec2_facts.tagged_instances }}"
+
+  - name: Create Private Zone
+    route53_zone:
+      # TODO: Centralize the vars so I can include the freeipa_domain as this zone value
+      zone: "{{ workshop_domain }}"
+      comment: Private IDM zone, created by Ansible Playbook
+      vpc_region: "{{ aws_region }}"
+      region: "{{ aws_region }}"
+      vpc_id: "{{ aws_vpc_id }}"
+      # register the output, feed the NS records into the next task
+    register: new_idm_private_zone
+
+  - name: Create Private Reverse zone
+    route53_zone:
+      zone: "{{ reverse_dns_zone.split('.')[2:] | join('.') }}"
+      comment: IDM Internal Private Reverse zone, created by Ansible Playbook
+      region: "{{ aws_region }}"
+      vpc_region: "{{ aws_region }}"
+      vpc_id: "{{ aws_vpc_id }}"
+    register: new_idm_private_reverse_zone
+    with_items: "{{ ec2_facts.tagged_instances }}"
+
+  - name: Create PTR record in the private reverse zone set to the IDM Server
+    route53:
+      state: present
+      zone: "{{ reverse_dns_zone.split('.')[2:] | join('.') }}"
+      record: "{{ reverse_dns_zone_record }}"
+      private_zone: yes
+      overwrite: true
+      type: PTR
+      ttl: 600
+      # TODO Come back and variablize this when the vars are central in the ext var file
+      value: "idm.fiercesw.network"
+      wait: no
+
+  - name: Create records in the private zone - IDM A
+    route53:
+      state: present
+      # TODO Come back and set to the freeipa_domain when in  central var file
+      zone: "{{ workshop_domain }}"
+      private_zone: yes
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "idm.{{ workshop_domain }}"
+      type: A
+      value: "{{ item.private_ip }}"
+    with_items: "{{ ec2_facts.tagged_instances }}"
+
+  - name: Create records in the private zone - IDM A IPA-CA
+    route53:
+      state: present
+      # TODO Come back and set to the freeipa_domain when in  central var file
+      zone: "{{ workshop_domain }}"
+      private_zone: yes
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "ipa-ca.{{ workshop_domain }}"
+      type: A
+      value: "{{ item.private_ip }}"
+    with_items: "{{ ec2_facts.tagged_instances }}"
+
+  - name: Create records in the private zone - Kerberos REALM TXT
+    route53:
+      state: present
+      # TODO Come back and set to the freeipa_domain when in  central var file
+      zone: "{{ workshop_domain }}"
+      private_zone: yes
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "_kerberos.{{ workshop_domain }}"
+      type: TXT
+      value: '"{{ workshop_domain | upper }}"'
+
+  - name: Create records in the private zone - Kerberos Master TCP SRV
+    route53:
+      state: present
+      # TODO Come back and set to the freeipa_domain when in  central var file
+      zone: "{{ workshop_domain }}"
+      private_zone: yes
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "_kerberos-master._tcp.{{ workshop_domain }}"
+      type: SRV
+      value: "0 100 88 idm.{{ workshop_domain }}"
+      
+  - name: Create records in the private zone - Kerberos Master UDP SRV
+    route53:
+      state: present
+      # TODO Come back and set to the freeipa_domain when in  central var file
+      zone: "{{ workshop_domain }}"
+      private_zone: yes
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "_kerberos-master._udp.{{ workshop_domain }}"
+      type: SRV
+      value: "0 100 88 idm.{{ workshop_domain }}"
+  - name: Create records in the private zone - Kerberos TCP SRV 88
+    route53:
+      state: present
+      # TODO Come back and set to the freeipa_domain when in  central var file
+      zone: "{{ workshop_domain }}"
+      private_zone: yes
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "_kerberos._tcp.{{ workshop_domain }}"
+      type: SRV
+      value: "0 100 88 idm.{{ workshop_domain }}"
+  - name: Create records in the private zone - Kerberos UDP SRV 88
+    route53:
+      state: present
+      # TODO Come back and set to the freeipa_domain when in  central var file
+      zone: "{{ workshop_domain }}"
+      private_zone: yes
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "_kerberos._udp.{{ workshop_domain }}"
+      type: SRV
+      value: "0 100 88 idm.{{ workshop_domain }}"
+  - name: Create records in the private zone - Kpasswd TCP SRV 464
+    route53:
+      state: present
+      # TODO Come back and set to the freeipa_domain when in  central var file
+      zone: "{{ workshop_domain }}"
+      private_zone: yes
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "_kpasswd._tcp.{{ workshop_domain }}"
+      type: SRV
+      value: "0 100 464 idm.{{ workshop_domain }}"
+  - name: Create records in the private zone - Kpasswd UDP SRV 464
+    route53:
+      state: present
+      # TODO Come back and set to the freeipa_domain when in  central var file
+      zone: "{{ workshop_domain }}"
+      private_zone: yes
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "_kpasswd._udp.{{ workshop_domain }}"
+      type: SRV
+      value: "0 100 464 idm.{{ workshop_domain }}"
+  - name: Create records in the private zone - LDAP TCP SRV 389
+    route53:
+      state: present
+      # TODO Come back and set to the freeipa_domain when in  central var file
+      zone: "{{ workshop_domain }}"
+      private_zone: yes
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "_ldap._tcp.{{ workshop_domain }}"
+      type: SRV
+      value: "0 100 389 idm.{{ workshop_domain }}"
+  - name: Create records in the private zone - NTP UDP SRV 123
+    route53:
+      state: present
+      # TODO Come back and set to the freeipa_domain when in  central var file
+      zone: "{{ workshop_domain }}"
+      private_zone: yes
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "_ntp._udp.{{ workshop_domain }}"
+      type: SRV
+      value: "0 100 123 idm.{{ workshop_domain }}"
+
+  - name: Check for existing public matching R53 zones
+    route53_zone:
+      # TODO Replace with freeipa_domain
+      zone: "{{ workshop_domain }}"
+    register: hosted_zones
+
+  - name: Create Public R53 Zone if none exists
+    route53_zone:
+      # TODO Replace with freeipa_domain
+      zone: "{{ workshop_domain }}"
+      state: present
+      comment: "Public Workshop Zone created by Ansible playbook"
+    register: hosted_zones_new
+    when: hosted_zones.result == 0
+
+  - name: Set Public Zone ID - Created
+    set_fact:
+      pub_zone_id: "{{ hosted_zones_new.zone_id }}"
+    when: hosted_zones.result == 0
+
+  - name: Set Public Zone ID - Existing
+    set_fact:
+      pub_zone_id: "{{ hosted_zones.zone_id }}"
+    when: hosted_zones.result != 0
+
+  - name: Create record in public R53 zone - Kerberos TXT
+    route53:
+      zone: "{{ workshop_domain }}"
+      state: present
+      hosted_zone_id: "{{ pub_zone_id }}"
+      private_zone: no
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "_kerberos.{{ workshop_domain }}"
+      type: TXT
+      value: '"{{ workshop_domain | upper }}"'
+
+  - name: Create record in public R53 zone - IDM A
+    route53:
+      zone: "{{ workshop_domain }}"
+      state: present
+      hosted_zone_id: "{{ pub_zone_id }}"
+      private_zone: no
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "idm.{{ workshop_domain }}"
+      type: A
+      value: "{{ item.public_ip }}"
+    with_items: "{{ ec2_facts.tagged_instances }}"
+
+  - name: Create record in public R53 zone - IDM A IPA-CA
+    route53:
+      zone: "{{ workshop_domain }}"
+      state: present
+      hosted_zone_id: "{{ pub_zone_id }}"
+      private_zone: no
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "ipa-ca.{{ workshop_domain }}"
+      type: A
+      value: "{{ item.public_ip }}"
+    with_items: "{{ ec2_facts.tagged_instances }}"
+
+  - name: Create record in public R53 zone - Kerberos Master TCP SRV
+    route53:
+      zone: "{{ workshop_domain }}"
+      state: present
+      hosted_zone_id: "{{ pub_zone_id }}"
+      private_zone: no
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "_kerberos-master._tcp.{{ workshop_domain }}"
+      type: SRV
+      value: "0 100 88 idm.{{ workshop_domain }}"
+
+  - name: Create record in public R53 zone - Kerberos Master UDP SRV
+    route53:
+      zone: "{{ workshop_domain }}"
+      state: present
+      hosted_zone_id: "{{ pub_zone_id }}"
+      private_zone: no
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "_kerberos-master._udp.{{ workshop_domain }}"
+      type: SRV
+      value: "0 100 88 idm.{{ workshop_domain }}"
+
+  - name: Create record in public R53 zone - Kerberos TCP SRV
+    route53:
+      zone: "{{ workshop_domain }}"
+      state: present
+      hosted_zone_id: "{{ pub_zone_id }}"
+      private_zone: no
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "_kerberos._tcp.{{ workshop_domain }}"
+      type: SRV
+      value: "0 100 88 idm.{{ workshop_domain }}"
+
+  - name: Create record in public R53 zone - Kerberos UDP SRV
+    route53:
+      zone: "{{ workshop_domain }}"
+      state: present
+      hosted_zone_id: "{{ pub_zone_id }}"
+      private_zone: no
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "_kerberos._udp.{{ workshop_domain }}"
+      type: SRV
+      value: "0 100 88 idm.{{ workshop_domain }}"
+
+  - name: Create record in public R53 zone - Kpasswd TCP SRV
+    route53:
+      zone: "{{ workshop_domain }}"
+      state: present
+      hosted_zone_id: "{{ pub_zone_id }}"
+      private_zone: no
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "_kpasswd._tcp.{{ workshop_domain }}"
+      type: SRV
+      value: "0 100 464 idm.{{ workshop_domain }}"
+
+  - name: Create record in public R53 zone - Kpasswd UDP SRV
+    route53:
+      zone: "{{ workshop_domain }}"
+      state: present
+      hosted_zone_id: "{{ pub_zone_id }}"
+      private_zone: no
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "_kpasswd._udp.{{ workshop_domain }}"
+      type: SRV
+      value: "0 100 464 idm.{{ workshop_domain }}"
+
+  - name: Create record in public R53 zone - LDAP TCP SRV
+    route53:
+      zone: "{{ workshop_domain }}"
+      state: present
+      hosted_zone_id: "{{ pub_zone_id }}"
+      private_zone: no
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "_ldap._tcp.{{ workshop_domain }}"
+      type: SRV
+      value: "0 100 389 idm.{{ workshop_domain }}"
+
+  - name: Create record in public R53 zone - NTP UDP SRV
+    route53:
+      zone: "{{ workshop_domain }}"
+      state: present
+      hosted_zone_id: "{{ pub_zone_id }}"
+      private_zone: no
+      overwrite: true
+      ttl: 600
+      wait: no
+      record: "_ntp._udp.{{ workshop_domain }}"
+      type: SRV
+      value: "0 100 123 idm.{{ workshop_domain }}"
+
+# Now that we have the AWS Environment set up, dig into the actual server...
+
+- name: Play 2 - Set up RH Identity Management Server (freeipa-server)
+  hosts: launched
+  become: True
+  vars:
+  - ansible_user: ec2-user
+  - ansible_ssh_user: ec2-user
+  - ansible_connection: ssh
+  - ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+  - host_key_checking: False
+  gather_facts: True
+
+  tasks:
+
+  - name: Include the shared variables
+    include_vars:
+      file: deployer-vars.yaml
+
+  - name: Wait for SSH to come up
+    wait_for_connection:
+      delay: 10
+      timeout: 180
+
+  - name: Connect to new EC2 instance and set hostname
+    hostname:
+      name: "{{ freeipa_server_fqdn }}"
+
+  - name: Set /etc/hosts file
+    copy:
+      dest: "/etc/hosts"
+      content: |
+        127.0.0.1 localhost localdomain
+        {{ private_ip }} {{ freeipa_server_fqdn }} {{ freeipa_server_domain }}
+
+  - name: Do some AWS hostname preservation
+    lineinfile:
+      path: /etc/cloud/cloud.cfg
+      regexp: '^preserve_hostname'
+      line: "preserve_hostname: true"
+
+  - name: Connect to EC2 instance and enable repos
+    command: "yum-config-manager --enable rhui-REGION-rhel-server-extras --enable rhui-REGION-rhel-server-optional --enable rhui-REGION-rhel-server-rhscl"
+
+  - name: Connect to EC2 instance and set extras repos
+    become: yes
+    yum:
+      enablerepo: "rhui-REGION-rhel-server-extras"
+      disable_gpg_check: yes
+    ignore_errors: yes
+
+  - name: Connect to EC2 instance and set optional repos
+    become: yes
+    yum:
+      enablerepo: "rhui-REGION-rhel-server-optional"
+      disable_gpg_check: yes
+    ignore_errors: yes
+
+  - name: Connect to EC2 instance and set scl repos
+    become: yes
+    yum:
+      enablerepo: "rhui-REGION-rhel-server-rhscl"
+      disable_gpg_check: yes
+    ignore_errors: yes
+
+  - name: Add EPEL repository
+    yum_repository:
+      name: epel
+      description: EPEL YUM repo
+      baseurl: https://download.fedoraproject.org/pub/epel/$releasever/$basearch/
+    when: ansible_os_family == "RedHat"
+
+  - name: Update base packages
+    yum:
+      name: "*"
+      state: latest
+      update_cache: yes
+    register: update_task_result
+
+  - name: Reboot immediately if there were new packages installed
+    shell: "sleep 5 && reboot"
+    async: 1
+    poll: 0
+    when: update_task_result is changed
+
+  - name: Wait for the reboot to complete if there were new packages installed
+    wait_for_connection:
+      connect_timeout: 20
+      sleep: 5
+      delay: 5
+      timeout: 300
+    when: update_task_result is changed
+
+  - name: Connect to EC2 instance and install Pip
+    become: yes
+    yum:
+      disable_gpg_check: yes
+      state: present
+      name: "{{ item }}"
+    with_items:
+     - python2-pip
+     - nano
+     - firewalld
+
+  - name: Start firewalld
+    service:
+      name: firewalld
+      state: started
+      enabled: true
+
+  - name: Connect to RH IDM server and set firewall
+    firewalld:
+      permanent: yes
+      immediate: yes
+      state: enabled
+      service: "{{ item }}"
+    with_items:
+     - freeipa-ldap
+     - freeipa-ldaps
+     - dns
+     - ntp
+     - https
+     - http
+
+  - name: Connect to RH IDM server and set firewall for port 8080
+    firewalld:
+      permanent: yes
+      immediate: yes
+      state: enabled
+      port: 8080/tcp
+
+  - name: Install FreeIPA server packages
+    yum:
+      name: "{{ freeipa_server_pkgs }}"
+      state: present
+    delay: 10
+    register: result
+    retries: 3
+    until: result is succeeded
+
+  - name: Update pip
+    pip:
+      name: pip
+      state: latest
+
+  - name: Install FreeIPA server pip dependencies
+    pip:
+      name: "{{ freeipa_server_pip_pkgs }}"
+      state: present
+    delay: 10
+    register: result
+    retries: 3
+    until: result is succeeded
+
+  - name: Echo the FreeIPA server installer
+    debug:
+      msg: "{{ freeipa_server_install_base_command }} {{ freeipa_server_install_options | join(' ') }}"
+
+  - name: Run the FreeIPA server installer
+    args:
+      creates: /etc/ipa/default.conf
+    command: "{{ freeipa_server_install_base_command }} {{ freeipa_server_install_options | join(' ') }}"
+    #notify: restart ipa services
+
+  - name: Do initial kinit admin auth
+    shell: "echo '{{ freeipa_server_admin_password }}' | kinit admin"
+
+  - name: Create batch student users
+    shell: "echo '{{ idm_provision_users_password }}' | ipa user-add {{ idm_provision_users_prefix }}{{ item }}{{ idm_provision_users_suffix }} --first=Student --last=User{{ item }} --password --shell=/bin/bash"
+    with_sequence: start={{ idm_provision_users_start }} count={{ idm_provision_users_count }}
+    when: idm_provision_users
+
+  - name: Set expiration out for a decade so users dont have to reset passwords
+    shell: "ipa user-mod {{ idm_provision_users_prefix }}{{ item }}{{ idm_provision_users_suffix }} --setattr krbPasswordExpiration=20260420162000Z"
+    with_sequence: start={{ idm_provision_users_start }} count={{ idm_provision_users_count }}
+    when: idm_provision_users
+
+  - name: Copy Binding User template file over
+    copy:
+      src: idm-binddn.update.j2
+      dest: /etc/ipa/idm-binddn.update
+    when: idm_provision_users
+
+  - name: Create Binding user from template
+    shell: "ipa-ldap-updater /etc/ipa/idm-binddn.update"
+    when: idm_provision_users
+
+  handlers:
+  - name: restart ipa services
+    service:
+      enabled: yes
+      name: ipa
+      state: restarted
