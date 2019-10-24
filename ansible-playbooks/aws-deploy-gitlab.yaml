@@ -172,7 +172,7 @@
 
   # Now that we have the AWS Environment set up, dig into the actual server...
 
-- name: Play 2 - Set up RH Identity Management Server (freeipa-server)
+- name: Play 2 - Set up Gitlab CE Server (gitlab-ce)
   hosts: launched
   become: True
   vars:

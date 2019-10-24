@@ -1,0 +1,91 @@
+# General vars
+## This file assumes you're deploying RH IDM as part of a workshop environment for Secure Software Factories
+## The config assumes:
+## - env_prefix.example.com for the OCP cluster/workshops root,
+## - idm.example.com for the RH IDM Server
+## - example.com is registered and DNS is set to be served from Route 53
+## - There is an existing VPC to deploy this RH IDM server to
+## - Will create a series of student users
+## - Will secure the web panel with an SSL Certificate from Lets Encrypt
+## - Will create a DN Binding User (workshopbdn) to be used to bind services to RH IDM
+
+## certbot_email: This is the email submitted to Let's Encrypt when generating SSL certificates for the web panel
+certbot_email: you@example.com
+enable_certbot: true
+
+## workshop_prefix: this is the initial subdomain environment for the workshop
+workshop_prefix: env_prefix
+## workshop_domain: root FQDN for the workshop
+workshop_domain: example.com
+
+## route53_zone{_id}: The domain and Zone ID from AWS's Route 53 for the 
+route53_zone: example.com
+route53_zone_id: DOMAIN_ID_HERE
+
+## ssh_private_key_location: This is the private key file you have locally that is also available in AWS
+ssh_private_key_location: "~/Development/NotKeys/NAME_OF_KEY.pem"
+aws_key_name: NAME_OF_KEY
+aws_region: us-east-1
+aws_vpc_id: vpc-1234
+
+# IdM specific vars
+idm_hostname: idm
+idm_instance_type: m5.xlarge
+idm_enable_letsencrypt: true
+idm_provision_users: true
+idm_provision_users_prefix: student-user
+idm_provision_users_suffix:
+idm_provision_users_start: 0
+idm_provision_users_count: 50
+idm_provision_users_password: studentPassword
+
+freeipa_server_admin_password: securePassword
+freeipa_server_ds_password: securePassword
+
+#============================================================================
+# DO NOT EDIT PAST THIS POINT
+#============================================================================
+
+ansible_ssh_private_key_file: "{{ ssh_private_key_location }}"
+freeipa_server_domain: "{{ workshop_domain }}"
+freeipa_server_fqdn: "{{ idm_hostname }}.{{ workshop_domain }}"
+freeipa_server_ip: "{{ ansible_ssh_host }}"
+freeipa_server_realm: "{{ workshop_domain | upper }}"
+freeipa_server_manage_host: false
+freeipa_server_install_base_command: ipa-server-install --unattended
+freeipa_server_pkgs:
+  - bind
+  - bind-dyndb-ldap
+  - ipa-server
+  - ipa-server-common
+  - ipa-server-dns
+  - ipa-server-trust-ad
+  - krb5-devel
+  - "@Development tools"
+freeipa_server_pip_pkgs:
+  - custodia
+  - ipapython
+  - jwcrypto
+  - pyasn1-modules
+  - pyopenssl
+  - python-ldap
+freeipa_server_install_options:
+  - "--realm={{ freeipa_server_realm }}"
+  - "--domain={{ freeipa_server_domain }}"
+  - "--ds-password={{ freeipa_server_ds_password }}"
+  - "--admin-password={{ freeipa_server_admin_password }}"
+  - "--mkhomedir"
+  - "--hostname={{ freeipa_server_fqdn | default(ansible_fqdn) }}"
+  - "--no-ntp"
+#  - "--ip-address={{ freeipa_server_ip }}"
+#  - "--no-host-dns"
+#  - "--idstart=5000"
+#  - "--ssh-trust-dns"
+#  - "--no-dns"
+#  - "--setup-dns"
+#  - "--forwarder=8.8.8.8"
+#  - "--allow-zone-overlap"
+#  - "--ip-address={{ private_ip }}"
+#  - "--ip-address={{ ansible_ssh_host }}"
+#  - "--auto-forwarders"
+freeipa_base_dn: "DC={{ freeipa_server_domain.split('.') | join(',DC=') }}"

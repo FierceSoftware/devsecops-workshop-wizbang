@@ -6,11 +6,11 @@
   tasks:
 
   - name: Include the shared variables
-    include_vars:
-      file: deployer-vars.yaml
+    include_vars: "vars/aws-deploy-rh-idm-vars.yaml"
 
   - name: Get facts about VPC
     ec2_vpc_subnet_facts:
+      region: "{{ aws_region }}"
       filters:
         vpc-id: "{{ aws_vpc_id }}"
         "tag:Network": "Public"
@@ -100,7 +100,6 @@
 
   - name: Create Private Zone
     route53_zone:
-      # TODO: Centralize the vars so I can include the freeipa_domain as this zone value
       zone: "{{ workshop_domain }}"
       comment: Private IDM zone, created by Ansible Playbook
       vpc_region: "{{ aws_region }}"
@@ -128,20 +127,18 @@
       overwrite: true
       type: PTR
       ttl: 600
-      # TODO Come back and variablize this when the vars are central in the ext var file
-      value: "idm.fiercesw.network"
+      value: "{{ freeipa_server_fqdn }}"
       wait: no
 
   - name: Create records in the private zone - IDM A
     route53:
       state: present
-      # TODO Come back and set to the freeipa_domain when in  central var file
       zone: "{{ workshop_domain }}"
       private_zone: yes
       overwrite: true
       ttl: 600
       wait: no
-      record: "idm.{{ workshop_domain }}"
+      record: "{{ freeipa_server_fqdn }}"
       type: A
       value: "{{ item.private_ip }}"
     with_items: "{{ ec2_facts.tagged_instances }}"
@@ -149,7 +146,6 @@
   - name: Create records in the private zone - IDM A IPA-CA
     route53:
       state: present
-      # TODO Come back and set to the freeipa_domain when in  central var file
       zone: "{{ workshop_domain }}"
       private_zone: yes
       overwrite: true
@@ -163,7 +159,6 @@
   - name: Create records in the private zone - Kerberos REALM TXT
     route53:
       state: present
-      # TODO Come back and set to the freeipa_domain when in  central var file
       zone: "{{ workshop_domain }}"
       private_zone: yes
       overwrite: true
@@ -176,7 +171,6 @@
   - name: Create records in the private zone - Kerberos Master TCP SRV
     route53:
       state: present
-      # TODO Come back and set to the freeipa_domain when in  central var file
       zone: "{{ workshop_domain }}"
       private_zone: yes
       overwrite: true
@@ -189,7 +183,6 @@
   - name: Create records in the private zone - Kerberos Master UDP SRV
     route53:
       state: present
-      # TODO Come back and set to the freeipa_domain when in  central var file
       zone: "{{ workshop_domain }}"
       private_zone: yes
       overwrite: true
@@ -198,10 +191,10 @@
       record: "_kerberos-master._udp.{{ workshop_domain }}"
       type: SRV
       value: "0 100 88 idm.{{ workshop_domain }}"
+
   - name: Create records in the private zone - Kerberos TCP SRV 88
     route53:
       state: present
-      # TODO Come back and set to the freeipa_domain when in  central var file
       zone: "{{ workshop_domain }}"
       private_zone: yes
       overwrite: true
@@ -210,10 +203,10 @@
       record: "_kerberos._tcp.{{ workshop_domain }}"
       type: SRV
       value: "0 100 88 idm.{{ workshop_domain }}"
+
   - name: Create records in the private zone - Kerberos UDP SRV 88
     route53:
       state: present
-      # TODO Come back and set to the freeipa_domain when in  central var file
       zone: "{{ workshop_domain }}"
       private_zone: yes
       overwrite: true
@@ -222,10 +215,10 @@
       record: "_kerberos._udp.{{ workshop_domain }}"
       type: SRV
       value: "0 100 88 idm.{{ workshop_domain }}"
+
   - name: Create records in the private zone - Kpasswd TCP SRV 464
     route53:
       state: present
-      # TODO Come back and set to the freeipa_domain when in  central var file
       zone: "{{ workshop_domain }}"
       private_zone: yes
       overwrite: true
@@ -234,10 +227,10 @@
       record: "_kpasswd._tcp.{{ workshop_domain }}"
       type: SRV
       value: "0 100 464 idm.{{ workshop_domain }}"
+
   - name: Create records in the private zone - Kpasswd UDP SRV 464
     route53:
       state: present
-      # TODO Come back and set to the freeipa_domain when in  central var file
       zone: "{{ workshop_domain }}"
       private_zone: yes
       overwrite: true
@@ -246,10 +239,10 @@
       record: "_kpasswd._udp.{{ workshop_domain }}"
       type: SRV
       value: "0 100 464 idm.{{ workshop_domain }}"
+
   - name: Create records in the private zone - LDAP TCP SRV 389
     route53:
       state: present
-      # TODO Come back and set to the freeipa_domain when in  central var file
       zone: "{{ workshop_domain }}"
       private_zone: yes
       overwrite: true
@@ -258,10 +251,10 @@
       record: "_ldap._tcp.{{ workshop_domain }}"
       type: SRV
       value: "0 100 389 idm.{{ workshop_domain }}"
+
   - name: Create records in the private zone - NTP UDP SRV 123
     route53:
       state: present
-      # TODO Come back and set to the freeipa_domain when in  central var file
       zone: "{{ workshop_domain }}"
       private_zone: yes
       overwrite: true
@@ -273,13 +266,11 @@
 
   - name: Check for existing public matching R53 zones
     route53_zone:
-      # TODO Replace with freeipa_domain
       zone: "{{ workshop_domain }}"
     register: hosted_zones
 
   - name: Create Public R53 Zone if none exists
     route53_zone:
-      # TODO Replace with freeipa_domain
       zone: "{{ workshop_domain }}"
       state: present
       comment: "Public Workshop Zone created by Ansible playbook"
@@ -318,7 +309,7 @@
       overwrite: true
       ttl: 600
       wait: no
-      record: "idm.{{ workshop_domain }}"
+      record: "{{ freeipa_server_fqdn }}"
       type: A
       value: "{{ item.public_ip }}"
     with_items: "{{ ec2_facts.tagged_instances }}"
@@ -457,8 +448,7 @@
   tasks:
 
   - name: Include the shared variables
-    include_vars:
-      file: deployer-vars.yaml
+    include_vars: "aws-deploy-rh-idm-vars.yaml"
 
   - name: Wait for SSH to come up
     wait_for_connection:
@@ -539,11 +529,7 @@
     yum:
       disable_gpg_check: yes
       state: present
-      name: "{{ item }}"
-    with_items:
-     - python2-pip
-     - nano
-     - firewalld
+      name: ['python2-pip', 'nano', 'firewalld']
 
   - name: Start firewalld
     service:
@@ -619,14 +605,78 @@
     when: idm_provision_users
 
   - name: Copy Binding User template file over
-    copy:
-      src: idm-binddn.update.j2
+    template:
+      src: templates/idm-binddn.update.j2
       dest: /etc/ipa/idm-binddn.update
     when: idm_provision_users
 
   - name: Create Binding user from template
     shell: "ipa-ldap-updater /etc/ipa/idm-binddn.update"
     when: idm_provision_users
+    notify: restart ipa services
+
+  - name: Download Lets Encrypt installer
+    get_url:
+      url: https://dl.eff.org/certbot-auto
+      dest: /sbin/certbot
+      mode: '0755'
+    when: enable_certbot
+
+  # From https://www.identrust.com/dst-root-ca-x3
+  - name: Copy over DST Root CA X3
+    copy:
+      src: files/DST-Root-CA-X3.pem
+      dest: /opt/DST-Root-CA-X3.pem
+    when: enable_certbot
+
+  - name: Download LetsEncrypt CA
+    get_url:
+      url: https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem.txt
+      dest: /opt/lets-encrypt-x3-cross-signed.pem
+    when: enable_certbot
+
+  - name: Integrate DSTRootCAX3 with IPA
+    shell: "ipa-cacert-manage -n DSTRootCAX3 -t C,, install /opt/DST-Root-CA-X3.pem"
+    when: enable_certbot
+
+  - name: Update CA DB
+    shell: "ipa-certupdate -v"
+    when: enable_certbot
+
+  - name: Integrate Lets Encrypt CA Cross Signed Cert
+    shell: "ipa-cacert-manage -n letsencryptx3 -t C,, install /opt/lets-encrypt-x3-cross-signed.pem"
+    when: enable_certbot
+
+  - name: Update CA DB
+    shell: "ipa-certupdate -v"
+    when: enable_certbot
+
+  - name: Clone down FreeIPA Lets Encrypt provisioner - it's just easier this way
+    git:
+      repo: 'https://github.com/kenmoini/freeipa-letsencrypt'
+      dest: /opt/freeipa-letsencrypt
+    when: enable_certbot
+
+  #- name: Run initial LE setup
+  #  shell: "/opt/freeipa-letsencrypt/renew-le.sh --first-time"
+  #  when: enable_certbot
+
+#  - name: Stop httpd service before installing Certbot
+#    service:
+#      name: httpd
+#      state: stopped
+#    when: enable_certbot
+
+#  - name: Install Certbot and generate certificate with DNS verification
+#    shell: "cd /opt && certbot certonly -m {{ certbot_email }} --csr /opt/httpd-csr.der --agree-tos --noninteractive --standalone"
+#    #shell: "certbot certonly -m {{ certbot_email }} -d {{ freeipa_server_fqdn }} --agree-tos --noninteractive --standalone"
+#    when: enable_certbot
+
+#  - name: Start httpd service after installing certificates
+#    service:
+#      name: httpd
+#      state: started
+#    when: enable_certbot
 
   handlers:
   - name: restart ipa services
