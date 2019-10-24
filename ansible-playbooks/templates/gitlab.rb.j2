@@ -288,11 +288,11 @@ gitlab_rails['ldap_enabled'] = {{ gitlab_integrate_idm|lower }}
 gitlab_rails['ldap_servers'] = YAML.load <<-'EOS'
 main: # 'main' is the GitLab 'provider ID' of this LDAP server
   label: 'LDAP'
-  host: '{{ freeipa_server_fqdn }}'
+  host: '{{ gitlab_ldap_domain }}'
   port: 389
   uid: 'uid'
   bind_dn: 'CN=Directory Manager'
-  password: '{{ freeipa_server_ds_password }}'
+  password: '{{ gitlab_bind_pass }}'
   encryption: 'start_tls' # "start_tls" or "simple_tls" or "plain"
   verify_certificates: false
   smartcard_auth: false
@@ -309,7 +309,7 @@ main: # 'main' is the GitLab 'provider ID' of this LDAP server
     last_name: 'sn'
   user_filter: ''
   ## EE only
-  group_base: ''
+  group_base: 'CN=groups,CN=accounts,{{ freeipa_base_dn }}'
   admin_group: ''
   sync_ssh_keys: false
 EOS

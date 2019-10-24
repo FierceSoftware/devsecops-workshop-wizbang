@@ -10,6 +10,7 @@
 
   - name: Get facts about VPC
     ec2_vpc_subnet_facts:
+      region: "{{ aws_region }}"
       filters:
         vpc-id: "{{ aws_vpc_id }}"
         "tag:Network": "Public"
@@ -45,7 +46,7 @@
   - name: Create EC2 Instance
     ec2:
       key_name: "{{ aws_key_name }}"
-      instance_type: "{{ idm_instance_type }}"
+      instance_type: "{{ gitlab_instance_type }}"
       # ami-0d70a070 = RHEL 7.5 in us-east-1
       # ami-000db10762d0c4c05 = RHEL 7.6 in us-east-1
       image: ami-000db10762d0c4c05
@@ -90,14 +91,12 @@
 
   - name: Check for existing public matching R53 zones
     route53_zone:
-      # TODO Replace with freeipa_domain
-      zone: "{{ workshop_domain }}"
+      zone: "{{ route53_zone }}"
     register: hosted_zones
 
   - name: Create Public R53 Zone if none exists
     route53_zone:
-      # TODO Replace with freeipa_domain
-      zone: "{{ workshop_domain }}"
+      zone: "{{ route53_zone }}"
       state: present
       comment: "Public Workshop Zone created by Ansible playbook"
     register: hosted_zones_new
@@ -115,7 +114,7 @@
 
   - name: Create record in public R53 zone - GitLab A
     route53:
-      zone: "{{ workshop_domain }}"
+      zone: "{{ route53_zone }}"
       state: present
       hosted_zone_id: "{{ pub_zone_id }}"
       private_zone: no
@@ -129,7 +128,7 @@
 
   - name: Create record in public R53 zone - GitLab Subs A
     route53:
-      zone: "{{ workshop_domain }}"
+      zone: "{{ route53_zone }}"
       state: present
       hosted_zone_id: "{{ pub_zone_id }}"
       private_zone: no
@@ -144,8 +143,7 @@
   - name: Create records in the private zone - GitLab A
     route53:
       state: present
-      # TODO Come back and set to the freeipa_domain when in  central var file
-      zone: "{{ workshop_domain }}"
+      zone: "{{ route53_zone }}"
       private_zone: yes
       overwrite: true
       ttl: 600
@@ -158,8 +156,7 @@
   - name: Create records in the private zone - GitLab Subs A
     route53:
       state: present
-      # TODO Come back and set to the freeipa_domain when in  central var file
-      zone: "{{ workshop_domain }}"
+      zone: "{{ route53_zone }}"
       private_zone: yes
       overwrite: true
       ttl: 600
@@ -218,6 +215,11 @@
       state: latest
       update_cache: yes
     register: update_task_result
+
+  - name: Add /usr/local/bin to PATH since RHEL is weird...
+    copy:
+      dest: /etc/profile.d/usr.local.bin.sh
+      content: 'PATH=$PATH:/usr/local/bin'
 
   - name: Reboot immediately if there were new packages installed
     shell: "sleep 5 && reboot"
@@ -320,10 +322,17 @@
       mode: 0600
     notify: restart gitlab
 
+  #- name: Copy over the repos into each user
+  #  shell: 'gitlab-rake "import:github[{{ gitlab_preprovision_repo_github_access_token }},{{ gitlab_preprovision_users_prefix }}{{ item }}{{ gitlab_preprovision_users_suffix }},{{ gitlab_preprovision_users_prefix }}{{ item }}{{ gitlab_preprovision_users_suffix }}/openshift-tasks-devsecops-app,kenmoini/openshift-tasks-devsecops-app]" RAILS_ENV=production'
+  #  with_sequence: start={{ gitlab_preprovision_users_start }} count={{ gitlab_preprovision_users_count }}
+  #  when: gitlab_preprovision_repos
+
   - name: Force restart of gitlab
     meta: flush_handlers
 
-  
+  - name: GitLab Setup Complete!
+    debug:
+      msg: "WARNING!!!!  You must now IMMEDIATE navigate to {{ gitlab_generated_hostname }} and set the default admin/root password!"  
 
   # Start and configure GitLab. Sometimes the first run fails, but after that,
   # restarts fix problems, so ignore failures on this run.

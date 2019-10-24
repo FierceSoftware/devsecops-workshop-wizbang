@@ -28,15 +28,29 @@ aws_region: us-east-1
 aws_vpc_id: vpc-1234
 
 # Gitlab specific vars
+## gitlab_hostname: Just the node hostname, not the FQDN
 gitlab_hostname: gitlab
-gitlab_edition: "gitlab-ce"
+gitlab_edition: "gitlab-ee"
 gitlab_version: ''
 gitlab_instance_type: m5.2xlarge
+
 gitlab_enable_letsencrypt: true
-gitlab_integrate_idm_ldap: true
+
+gitlab_integrate_idm: true
 gitlab_ldap_domain: idm.example.com
-gitlab_bind_user: workshopbdn
+gitlab_ldap_realm: example.com
+gitlab_bind_user: admin
 gitlab_bind_pass: superSecretPassword
+
+gitlab_preprovision_repos: false
+gitlab_preprovision_repo_github_access_token: CHANGE_ME
+gitlab_preprovision_repo_urls:
+  - kenmoini/openshift-tasks-devsecops-app
+gitlab_preprovision_users_prefix: student-user
+gitlab_preprovision_users_suffix:
+gitlab_preprovision_users_start: 0
+gitlab_preprovision_users_count: 50
+gitlab_preprovision_users_password: studentPassword
 
 #============================================================================
 # DO NOT EDIT PAST THIS POINT
@@ -46,6 +60,7 @@ ansible_ssh_private_key_file: "{{ ssh_private_key_location }}"
 
 gitlab_server_pkgs:
   - curl
+  - git
   - policycoreutils-python
   - openssh-server
   - openssl
@@ -54,7 +69,10 @@ gitlab_server_pkgs:
   - nano
   - wget
   - firewalld
+  - ipa-client
+  - python3-pip
 
 gitlab_download_validate_certs: true
 gitlab_config_template: "gitlab.rb.j2"
 gitlab_generated_hostname: "{{ 'https' if gitlab_enable_letsencrypt else 'http' }}://{{ gitlab_hostname }}.{{ workshop_domain }}"
+freeipa_base_dn: "DC={{ gitlab_ldap_realm.split('.') | join(',DC=') }}"

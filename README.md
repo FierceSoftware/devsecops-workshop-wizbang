@@ -70,7 +70,7 @@ $ vim aws_env.sh
 $ source aws_env.sh
 ```
 
-## Deploying Red Hat Identity Management
+## Deploying Red Hat Identity Management (Ansible-based)
 
 Arguably, this is the first thing you should do.
 
@@ -89,6 +89,22 @@ $ ansible-playbook aws-deploy-rh-idm.yaml
 ```
 
 Once complete, you should be able to log into the RH IDM web panel and start integrating it as an LDAP source into the rest of the Secure Software Factory.
+
+## Deploying GitLab EE (Ansible-based)
+
+Once you have LDAP set up, you can deploy GitLab EE in (ideally) the same VPC as your RH IDM server on AWS.
+This provisioner will deploy GitLab, add Let's Encrypt, and configure LDAP all in one go - LDAP can also be disabled and internal default auth provider will be used instead.
+
+Additionally, if you'd like you can also pre-provision each user a series of repositories if you'd like.
+In order to pre-provision repositories for users, you'll need to first create a [Personal Access Token in GitHub](https://github.com/settings/tokens).  Then add that token and the list of repositories from GitHub you'd like to clone into each student user, as defined in the vars file ```{example_}aws-deploy-gitlab-vars.yaml```
+Currently, the pre-provisioner is disabled because GitLab does not auto-sync users from LDAP until they log in at least once via the WebUI...
+
+```
+$ cd ansible-playbooks/
+$ cp example_aws-deploy-gitlab-vars.yaml aws-deploy-gitlab-vars.yaml
+$ vim aws-deploy-gitlab-vars.yaml
+$ ansible-playbook aws-deploy-gitlab.yaml
+```
 
 ## Deploying CloudBees Core
 
