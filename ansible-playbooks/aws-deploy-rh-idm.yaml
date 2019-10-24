@@ -657,9 +657,15 @@
       dest: /opt/freeipa-letsencrypt
     when: enable_certbot
 
-  #- name: Run initial LE setup
-  #  shell: "/opt/freeipa-letsencrypt/renew-le.sh --first-time"
-  #  when: enable_certbot
+  - name: Disable extra Apache SSL Listen 443 directive...IDK man, it's all screwy
+    lineinfile:
+      path: /etc/httpd/conf.d/nss.conf
+      regexp: '^Listen 443'
+      line: '#Listen 443'
+
+  - name: Run initial LE setup
+    shell: "/opt/freeipa-letsencrypt/renew-le.sh --first-time"
+    when: enable_certbot
 
 #  - name: Stop httpd service before installing Certbot
 #    service:

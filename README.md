@@ -8,17 +8,16 @@
 - Sonatype
 - SonarQube
 - SysDig
-- RocketChat
+- Rocket.Chat
 
 ## How to Use
 
-Fuck if I remember...
-
-1. Start with an OpenShift cluster with Logging/Metrics
-2. Deploy GitLab and IDM Servers by running playbooks found in ```ansible-playbooks``` (instructions below for )
-3. Run provisioner.sh in order to provision OCP Namespaces and Objects such as CloudBees and SysDig
-4. ???????
-5. Hope it works
+1. Start with an OpenShift cluster with Logging/Metrics - this is tested on a cluster deployed via the [Red Hat OpenShift on AWS Quickstart](https://aws.amazon.com/quickstart/architecture/openshift/)
+2. Deploy Red Hat Identity Management for LDAP
+3. Deploy GitLab
+4. Run workshop-ocp-provisioner.sh in order to provision OCP Namespaces, Manifests, and Objects such as CloudBees, Jenkins Agents, and centralized Rocket.Chat, Sonatype Nexus IQ Platform, SonarQube, and Eclipse Che.
+5. ???????
+6. Hope it works
 
 ## Requirements
 
