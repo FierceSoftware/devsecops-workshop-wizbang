@@ -6,8 +6,7 @@
   tasks:
 
   - name: Include the shared variables
-    include_vars:
-      file: deployer-vars.yaml
+    include_vars: "vars/aws-deploy-gitlab-vars.yaml"
 
   - name: Get facts about VPC
     ec2_vpc_subnet_facts:
@@ -186,8 +185,7 @@
   tasks:
 
   - name: Include the shared variables
-    include_vars:
-      file: deployer-vars.yaml
+    include_vars: "vars/aws-deploy-gitlab-vars.yaml"
 
   - name: Include OS-specific variables.
     include_vars: "gitlab-{{ ansible_os_family }}.yml"
@@ -322,8 +320,8 @@
       mode: 0600
     notify: restart gitlab
 
-  #- name: Force restart of gitlab
-  #  meta: flush_handlers
+  - name: Force restart of gitlab
+    meta: flush_handlers
 
   
 

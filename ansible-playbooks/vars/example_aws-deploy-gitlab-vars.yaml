@@ -1,0 +1,60 @@
+# General vars
+## This file assumes you're deploying GitLab as part of a workshop environment for Secure Software Factories
+## The config assumes:
+## - env_prefix.example.com for the OCP cluster/workshops root,
+## - gitlab.example.com for the GitLab Server
+## - example.com is registered and DNS is set to be served from Route 53
+## - There is an existing VPC to deploy this GitLab server to
+## - Will secure the web panel with an SSL Certificate from Lets Encrypt
+## - Will bind to RH IDM providing LDAP in the environment at idm.example.com, as provisioned by the accompanying provisioner
+
+## certbot_email: This is the email submitted to Let's Encrypt when generating SSL certificates for the web panel
+certbot_email: you@example.com
+enable_certbot: true
+
+## workshop_prefix: this is the initial subdomain environment for the workshop
+workshop_prefix: env_prefix
+## workshop_domain: root FQDN for the workshop
+workshop_domain: example.com
+
+## route53_zone{_id}: The domain and Zone ID from AWS's Route 53 for the 
+route53_zone: example.com
+route53_zone_id: DOMAIN_ID_HERE
+
+## ssh_private_key_location: This is the private key file you have locally that is also available in AWS
+ssh_private_key_location: "~/Development/NotKeys/NAME_OF_KEY.pem"
+aws_key_name: NAME_OF_KEY
+aws_region: us-east-1
+aws_vpc_id: vpc-1234
+
+# Gitlab specific vars
+gitlab_hostname: gitlab
+gitlab_edition: "gitlab-ce"
+gitlab_version: ''
+gitlab_instance_type: m5.2xlarge
+gitlab_enable_letsencrypt: true
+gitlab_integrate_idm_ldap: true
+gitlab_ldap_domain: idm.example.com
+gitlab_bind_user: workshopbdn
+gitlab_bind_pass: superSecretPassword
+
+#============================================================================
+# DO NOT EDIT PAST THIS POINT
+#============================================================================
+
+ansible_ssh_private_key_file: "{{ ssh_private_key_location }}"
+
+gitlab_server_pkgs:
+  - curl
+  - policycoreutils-python
+  - openssh-server
+  - openssl
+  - postfix
+  - tzdata
+  - nano
+  - wget
+  - firewalld
+
+gitlab_download_validate_certs: true
+gitlab_config_template: "gitlab.rb.j2"
+gitlab_generated_hostname: "{{ 'https' if gitlab_enable_letsencrypt else 'http' }}://{{ gitlab_hostname }}.{{ workshop_domain }}"
