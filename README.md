@@ -117,10 +117,11 @@ Once complete, you should be able to log into the RH IDM web panel and start int
 
 For an example of useful LDAP configuration specs, here is what it would look like when provisioned for {idm.}FIERCESW.NETWORK:
 
-- **Base DN:** DC=fiercesw,DC=network
+- **Realm:** FIERCESW.NETWORK
 - **Hostname:** idm.fiercesw.network
 - **Port:** 636
 - **Protocol::** LDAPS
+- **Base DN:** DC=fiercesw,DC=network
 - **Binding User DN:** CN=Directory Manager
 - **Binding User Pass:** Set in Ansible vars
 - **User Base DN:** CN=accounts,DC=fiercesw,DC=network
