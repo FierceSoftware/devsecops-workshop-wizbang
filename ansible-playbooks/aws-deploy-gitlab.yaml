@@ -165,6 +165,9 @@
       wait: no
       record: "{{ gitlab_hostname }}.{{ workshop_domain }}"
       type: A
+      #value: "{{ item.private_ip }}"
+      # TODO: Fix GitLab IP Listening Address - for some reason internal requests don't go through
+      #Ok, Actually we use the public IP for now
       value: "{{ item.public_ip }}"
     with_items: "{{ ec2_facts.tagged_instances }}"
 
@@ -178,6 +181,9 @@
       wait: no
       record: "*.{{ gitlab_hostname }}.{{ workshop_domain }}"
       type: A
+      #value: "{{ item.private_ip }}"
+      # TODO: Fix GitLab IP Listening Address - for some reason internal requests don't go through
+      #Ok, Actually we use the public IP for now
       value: "{{ item.public_ip }}"
     with_items: "{{ ec2_facts.tagged_instances }}"
 
