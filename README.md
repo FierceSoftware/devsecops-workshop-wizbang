@@ -21,9 +21,31 @@
 
 ## Requirements
 
-### AWS/Boto/Ansible/OC
+### Red Hat OpenShift Container Platform
 
-Before starting with most of these workshop provisioners, you'll need some packages installed locally odds are.
+Quickly, let's get this outta the way: 
+
+*"Can you use OKD/Minishift instead of Red Hat OCP?"*
+
+YES!  Though you'll need to make some changes to some image references, if your cluster is running without proper SSL certificates there are additional security bypasses you need to add, so on, and so forth.  It's possible, but would take a bit of tweaking.
+
+Either way, if you're trying to run this as a PoC, baseline Secure Software Factory, or as a workshop then you'll need a properly subscribed Red Hat OpenShift Container Platform cluster running.  Note that the version tested with this deployment is Red Hat OpenShift Container Platform 3.11.
+
+If you need to get a 60 or 90-day trial of Red Hat OpenShift Container Platform, contact [Fierce Software](https://fiercesw.com/request-a-demo) for a demo or trial subscription.
+
+The method we suggest deploying is via the [Red Hat OpenShift on AWS Quickstart](https://aws.amazon.com/quickstart/architecture/openshift/) - the Azure Quickstart has been used and tested as well.  When deploying this quickstart, there are a few things to know:
+
+1. Ensure you have [Cloud Access](https://www.redhat.com/en/technologies/cloud-computing/cloud-access) enabled for your Red Hat OpenShift/RHEL subscriptions or else you'll be double-charged for your RHEL/OpenShift subscriptions by AWS.
+2. When using this CloudFormation deployer and Cloud Access, in order to not be double-charged you'll need to specifiy the RHEL AMI - we test with ```ami-0240b09539b9692a0``` which is RHEL 7.6.
+3. Don't bother with the Gluster additions...it's never worked.
+4. You'll probably want to deploy into a new VPC...it's CloudFormations, what do you expect, a simple clean-up without torching the rest of your environment?
+5. You need at least 3 AZs so regions with only 2 are not acceptable.
+6. Try to set your App Node count to what you expect to run...you can turn off the nodes once they're launched but the scaling events are failure prone which leaves you playing Wack-a-mole with EC2 nodes, deleting subs from your RH Account, while timing everything properly...
+7. To add users, and cluster-admin roles to users, you'll need to SSH into the ```ansible-config``` Bastion host the Cloudformation deployment sets up, and modify the ```/etc/origin/master/htpasswd``` configuration on all 3 Master nodes.
+
+### AWS/Boto/Ansible/OC CLIs
+
+Before starting with most of these workshop provisioners, odds are you'll need some packages installed locally.
 
 #### Boto, Passlib, Ansible Installation
 
