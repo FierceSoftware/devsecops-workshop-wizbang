@@ -140,7 +140,10 @@
       wait: no
       record: "{{ freeipa_server_fqdn }}"
       type: A
-      value: "{{ item.private_ip }}"
+      #value: "{{ item.private_ip }}"
+      # TODO: Fix IDM IP Listening Address - for some reason internal requests don't go through
+      #Ok, Actually we use the public IP for now
+      value: "{{ item.public_ip }}"
     with_items: "{{ ec2_facts.tagged_instances }}"
 
   - name: Create records in the private zone - IDM A IPA-CA

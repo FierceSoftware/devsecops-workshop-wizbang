@@ -33,19 +33,23 @@ gitlab_hostname: gitlab
 gitlab_edition: "gitlab-ee"
 gitlab_version: ''
 gitlab_instance_type: m5.2xlarge
+gitlab_root_password: aSuperSecretPassword
 
-gitlab_enable_letsencrypt: true
+gitlab_enable_letsencrypt: false
 
-gitlab_integrate_idm: true
+gitlab_integrate_idm: false
 gitlab_ldap_domain: idm.example.com
+gitlab_ldap_port: 636
 gitlab_ldap_realm: example.com
 gitlab_bind_user: admin
 gitlab_bind_pass: superSecretPassword
 
+add_gitlab_ee_license: false
+gitlab_ee_license_file: "files/company.gitlab-license"
+
 gitlab_preprovision_repos: false
 gitlab_preprovision_repo_github_access_token: CHANGE_ME
-gitlab_preprovision_repo_urls:
-  - kenmoini/openshift-tasks-devsecops-app
+gitlab_preprovision_repo_github_repo: kenmoini/openshift-tasks-devsecops-app
 gitlab_preprovision_users_prefix: student-user
 gitlab_preprovision_users_suffix:
 gitlab_preprovision_users_start: 0
@@ -76,3 +80,6 @@ gitlab_download_validate_certs: true
 gitlab_config_template: "gitlab.rb.j2"
 gitlab_generated_hostname: "{{ 'https' if gitlab_enable_letsencrypt else 'http' }}://{{ gitlab_hostname }}.{{ workshop_domain }}"
 freeipa_base_dn: "DC={{ gitlab_ldap_realm.split('.') | join(',DC=') }}"
+
+gitlab_preprovision_repo_github_repo_user: "{{ gitlab_preprovision_repo_github_repo.split('/')[0] }}"
+gitlab_preprovision_repo_github_repo_repo: "{{ gitlab_preprovision_repo_github_repo.split('/')[1] }}"

@@ -94,9 +94,10 @@ $ source aws_env.sh
 
 ## Deploying Red Hat Identity Management (Ansible-based)
 
-Arguably, this is the first thing you should do.
+Arguably, this is the first thing you should do, after deploying OCP as this deployer needs an existing VPC.
 
 There is a provisioner to deploy Red Hat Identity Management (FreeIPA) in AWS from scratch.
+
 This will take care of provisioning the EC2 instance, setting public AND private Route 53 zones, and even using Let's Encrypt to update the SSL used to serve the web interface.
 
 1. Make sure you have completed the requirements of installing Ansible, Boto, and configured AWS credentials as stated above.
@@ -110,16 +111,34 @@ $ vim aws-deploy-rh-idm-vars.yaml
 $ ansible-playbook aws-deploy-rh-idm.yaml
 ```
 
+NOTE: Currently, there is an issue with how the services listen and AWS's DNS...Private Zone queries respond with the Public IP address of the IDM Server so it is ***VITAL*** to use LDAPS (port 636) and not LDAP (port 389) to keep from screaming your passwords in plain-text across Amazon's network...for a workshop that is alive for only a day it's not a big deal though.
+
 Once complete, you should be able to log into the RH IDM web panel and start integrating it as an LDAP source into the rest of the Secure Software Factory.
+
+For an example of useful LDAP configuration specs, here is what it would look like when provisioned for {idm.}FIERCESW.NETWORK:
+
+- **Base DN:** DC=fiercesw,DC=network
+- **Hostname:** idm.fiercesw.network
+- **Port:** 636
+- **Protocol::** LDAPS
+- **Binding User DN:** CN=Directory Manager
+- **Binding User Pass:** Set in Ansible vars
+- **User Base DN:** CN=accounts,DC=fiercesw,DC=network
+- **Group Base DN:** CN=groups,CN=accounts,DC=fiercesw,DC=network
+- **Username Field/Unique ID Attribute:** uid
+- **Email Attribute:** mail
+- **Display Name Attribute:** displayname
 
 ## Deploying GitLab EE (Ansible-based)
 
 Once you have LDAP set up, you can deploy GitLab EE in (ideally) the same VPC as your RH IDM server on AWS.
 This provisioner will deploy GitLab, add Let's Encrypt, and configure LDAP all in one go - LDAP can also be disabled and internal default auth provider will be used instead.
 
+If using GitLab EE you may have the deployer also copy over your License file.  You can simple set ```add_gitlab_ee_license``` to ```True``` and then copy your license to ```files/company.gitlab-license``` and it will automatically be copied to the GitLab host and enabled.
+
 Additionally, if you'd like you can also pre-provision each user a series of repositories if you'd like.
 In order to pre-provision repositories for users, you'll need to first create a [Personal Access Token in GitHub](https://github.com/settings/tokens).  Then add that token and the list of repositories from GitHub you'd like to clone into each student user, as defined in the vars file ```{example_}aws-deploy-gitlab-vars.yaml```
-Currently, the pre-provisioner is disabled because GitLab does not auto-sync users from LDAP until they log in at least once via the WebUI...
+Currently, the pre-provisioner is disabled because GitLab does not auto-sync users from LDAP until they log in at least once via the WebUI...yes, that means 
 
 ```
 $ cd ansible-playbooks/
@@ -127,6 +146,19 @@ $ cp example_aws-deploy-gitlab-vars.yaml aws-deploy-gitlab-vars.yaml
 $ vim aws-deploy-gitlab-vars.yaml
 $ ansible-playbook aws-deploy-gitlab.yaml
 ```
+
+Once the provisioner is complete, you can access the Web UI at ```https://gitlab.example.com```.  If you did not set an Admin/Root password in the Ansible Playbook's vars then you must ***IMMEDIATELY*** access the panel and set the Root password.  Otherwise, you can log in with the one set in the vars config YAML.
+
+Now if you set LDAP, you'll notice that you can log in but users aren't listed even if you have GitLab EE and LDAP Sync active.  It's just how GitLab is.
+You now need to log into all the student-userNN accounts you have in RH IDM/LDAP via the Web UI in order to manage them.
+
+Once you have logged in as each and every, individual user, all the users listed in the Web UI, you can run the 2nd step of the deployment to pre-provision the workshop repo.
+
+```
+$ ansible-playbook aws-deploy-gitlab.yaml --tags "setupRepos"
+```
+
+That will run the gitlab-rake command need to copy over the repos into the users' namespace.  Once this is complete you should have a GitLab server with each student user having their own repo imported from GitHub.
 
 ## Deploying CloudBees Core
 

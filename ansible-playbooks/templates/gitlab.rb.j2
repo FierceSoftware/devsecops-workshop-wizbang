@@ -289,7 +289,7 @@ gitlab_rails['ldap_servers'] = YAML.load <<-'EOS'
 main: # 'main' is the GitLab 'provider ID' of this LDAP server
   label: 'LDAP'
   host: '{{ gitlab_ldap_domain }}'
-  port: 389
+  port: {{ gitlab_ldap_port }}
   uid: 'uid'
   bind_dn: 'CN=Directory Manager'
   password: '{{ gitlab_bind_pass }}'
@@ -456,13 +456,17 @@ EOS
 #### Change the initial default admin password and shared runner registration tokens.
 ####! **Only applicable on initial setup, changing these settings after database
 ####!   is created and seeded won't yield any change.**
-# gitlab_rails['initial_root_password'] = "password"
+{% if gitlab_root_password %}
+gitlab_rails['initial_root_password'] = "{{ gitlab_root_password }}"
+{% endif %}
 # gitlab_rails['initial_shared_runners_registration_token'] = "token"
 
 #### Set path to an initial license to be used while bootstrapping GitLab.
 ####! **Only applicable on initial setup, future license updations need to be done via UI.
 ####! Updating the file specified in this path won't yield any change after the first reconfigure run.
-# gitlab_rails['initial_license_file'] = '/etc/gitlab/company.gitlab-license'
+{% if add_gitlab_ee_license %}
+gitlab_rails['initial_license_file'] = '/etc/gitlab/company.gitlab-license'
+{% endif %}
 
 #### Enable or disable automatic database migrations
 # gitlab_rails['auto_migrate'] = true

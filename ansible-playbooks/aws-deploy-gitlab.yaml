@@ -7,6 +7,9 @@
 
   - name: Include the shared variables
     include_vars: "vars/aws-deploy-gitlab-vars.yaml"
+    tags:
+    - always
+    - setupRepos
 
   - name: Get facts about VPC
     ec2_vpc_subnet_facts:
@@ -15,6 +18,9 @@
         vpc-id: "{{ aws_vpc_id }}"
         "tag:Network": "Public"
     register: vpc_subnet_facts
+    tags:
+    - always
+    - setupRepos
 
   - name: Create GitLab Security Group in the designated VPC
     ec2_group:
@@ -69,10 +75,16 @@
         workshop_group: "{{ workshop_prefix }}.{{ workshop_domain }}"
         prefix: "fswdso-gitlab"
     register: ec2_facts
+    tags:
+    - always
+    - setupRepos
 
   - name: dbg
     debug:
       msg: "{{ ec2_facts.tagged_instances.0 }}"
+    tags:
+    - always
+    - setupRepos
 
   - name: Wait a couple minutes...
     pause:
@@ -88,6 +100,9 @@
       ansible_ssh_user: ec2-user
       ansible_connection: ssh
     with_items: "{{ ec2_facts.tagged_instances }}"
+    tags:
+    - always
+    - setupRepos
 
   - name: Check for existing public matching R53 zones
     route53_zone:
@@ -183,9 +198,15 @@
 
   - name: Include the shared variables
     include_vars: "vars/aws-deploy-gitlab-vars.yaml"
+    tags:
+    - always
+    - setupRepos
 
   - name: Include OS-specific variables.
     include_vars: "gitlab-{{ ansible_os_family }}.yml"
+    tags:
+    - always
+    - setupRepos
 
   - name: Wait for SSH to come up
     wait_for_connection:
@@ -305,14 +326,6 @@
       gitlab_package_name: "{{ gitlab_edition }}{{ gitlab_package_version_separator }}{{ gitlab_version }}"
     when: gitlab_version != ''
 
-  - name: Install GitLab
-    package:
-      name: "{{ gitlab_package_name | default(gitlab_edition) }}"
-      state: present
-    when: not gitlab_file.stat.exists
-    environment:
-      EXTERNAL_URL: "{{ gitlab_generated_hostname }}"
-
   - name: Copy GitLab configuration file.
     template:
       src: "{{ gitlab_config_template }}"
@@ -321,13 +334,24 @@
       group: root
       mode: 0600
     notify: restart gitlab
+    when: not gitlab_config_file.stat.exists
 
-  #- name: Copy over the repos into each user
-  #  shell: 'gitlab-rake "import:github[{{ gitlab_preprovision_repo_github_access_token }},{{ gitlab_preprovision_users_prefix }}{{ item }}{{ gitlab_preprovision_users_suffix }},{{ gitlab_preprovision_users_prefix }}{{ item }}{{ gitlab_preprovision_users_suffix }}/openshift-tasks-devsecops-app,kenmoini/openshift-tasks-devsecops-app]" RAILS_ENV=production'
-  #  with_sequence: start={{ gitlab_preprovision_users_start }} count={{ gitlab_preprovision_users_count }}
-  #  when: gitlab_preprovision_repos
+  - name: Install GitLab
+    package:
+      name: "{{ gitlab_package_name | default(gitlab_edition) }}"
+      state: present
+    when: not gitlab_file.stat.exists
+    environment:
+      EXTERNAL_URL: "{{ gitlab_generated_hostname }}"
 
-  - name: Force restart of gitlab
+  - name: Copy over the repos into each user
+    shell: 'gitlab-rake "import:github[{{ gitlab_preprovision_repo_github_access_token }},{{ gitlab_preprovision_users_prefix }}{{ item }}{{ gitlab_preprovision_users_suffix }},{{ gitlab_preprovision_users_prefix }}{{ item }}{{ gitlab_preprovision_users_suffix }}/{{ gitlab_preprovision_repo_github_repo_repo }},{{ gitlab_preprovision_repo_github_repo_user }}/{{ gitlab_preprovision_repo_github_repo_repo }}]" RAILS_ENV=production'
+    with_sequence: start={{ gitlab_preprovision_users_start }} count={{ gitlab_preprovision_users_count }}
+    when: gitlab_preprovision_repos
+    tags:
+    - setupRepos
+
+  - name: Force reconfig of gitlab
     meta: flush_handlers
 
   - name: GitLab Setup Complete!
@@ -348,9 +372,3 @@
     command: gitlab-ctl reconfigure
     register: gitlab_restart
     failed_when: false
-
-
-
-  #- name: Post-install configuration
-  #- name: Connect to IdM
-  #- name: Clone repos to student user accounts
