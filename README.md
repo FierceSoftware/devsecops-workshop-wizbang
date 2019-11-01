@@ -128,7 +128,7 @@ For an example of useful LDAP configuration specs, here is what it would look li
 - **Group Base DN:** CN=groups,CN=accounts,DC=fiercesw,DC=network
 - **Username Field/Unique ID Attribute:** uid
 - **Email Attribute:** mail
-- **Display Name Attribute:** displayname
+- **Display Name Attribute:** displayname (or cn)
 
 ## Deploying GitLab EE (Ansible-based)
 

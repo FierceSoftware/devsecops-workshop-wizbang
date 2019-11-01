@@ -1,0 +1,58 @@
+{
+    "type" : "plugin-catalog",
+    "version" : "1",
+    "name" : "additional-openshift-workshop-plugins",
+    "displayName" : "Additional OpenShift Workshop Plugins",
+    "configurations" : [
+        {
+            "description" : "Additional plugins needed to integrate into OpenShift for DevSecOps workshops",
+            "includePlugins" : {
+                "openshift-client": {
+                    "url" : "https://updates.jenkins.io/latest/openshift-client.hpi"
+                },
+                "pipeline-build-step": {
+                    "url" : "https://updates.jenkins.io/latest/pipeline-build-step.hpi"
+                },
+                "pipeline-input-step": {
+                    "url" : "https://updates.jenkins.io/latest/pipeline-input-step.hpi"
+                },
+                "pipeline-milestone-step": {
+                    "url" : "https://updates.jenkins.io/latest/pipeline-milestone-step.hpi"
+                },
+                "pipeline-stage-step": {
+                    "url" : "https://updates.jenkins.io/latest/pipeline-stage-step.hpi"
+                },
+                "pipeline graph-analysis": {
+                    "url" : "https://updates.jenkins.io/latest/pipeline graph-analysis.hpi"
+                },
+                "pipeline-rest-api": {
+                    "url" : "https://updates.jenkins.io/latest/pipeline-rest-api.hpi"
+                },
+                "pipeline-stage-view": {
+                    "url" : "https://updates.jenkins.io/latest/pipeline-stage-view.hpi"
+                },
+                "pipeline-model-definition": {
+                    "url" : "https://updates.jenkins.io/latest/pipeline-model-definition.hpi"
+                },
+                "git-server": {
+                    "url" : "https://updates.jenkins.io/latest/git-server.hpi"
+                },
+                "lockable-resources": {
+                    "url" : "https://updates.jenkins.io/latest/lockable-resources.hpi"
+                },
+                "workflow-cps-global-lib": {
+                    "url" : "https://updates.jenkins.io/latest/workflow-cps-global-lib.hpi"
+                },
+                "workflow-aggrigator": {
+                    "url" : "https://updates.jenkins.io/latest/workflow-aggrigator.hpi"
+                },
+                "openshift-sync": {
+                    "url" : "https://updates.jenkins.io/latest/openshift-sync.hpi"
+                },
+                "openshift-pipeline": {
+                    "url" : "https://updates.jenkins.io/latest/openshift-pipeline.hpi"
+                }
+            }
+        }
+    ]
+}
