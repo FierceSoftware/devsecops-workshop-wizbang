@@ -65,6 +65,11 @@ function continueWithCJOCConfig {
 
     java -jar $CBC_OCP_WORK_DIR/jenkins-cli.jar -s "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/" teams workshop-team --put < $CBC_OCP_WORK_DIR/workshop-team.fiercesw.network.json
 
+    echo -e "\n================================================================================"
+    echo "Safely restarting CJOC..."
+    
+    java -jar $CBC_OCP_WORK_DIR/jenkins-cli.jar -s "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/" safe-restart
+
 
     echo -e "\n\n================================================================================"
     echo -e "Finished with deploying Cloudbees Core!\n Now feel free to finish configuring LDAP/RBAC"
@@ -160,7 +165,7 @@ if [ "$OCP_CJOC_ROUTE_EDGE_TLS" = "true" ]; then
     sed -e s,http://cloudbees-core,https://cloudbees-core,g < cloudbees-core.yml > tmp && mv tmp cloudbees-core-working.yml && \
     sed -e s,cloudbees-core.example.com,$OCP_CJOC_ROUTE,g < cloudbees-core-working.yml > tmp && mv tmp cloudbees-core-working.yml && \
     sed -e s,myproject,$OCP_PROJECT_NAME,g < cloudbees-core-working.yml > tmp && mv tmp cloudbees-core-working.yml && \
-    sed -e 's/host:  \"test-cjoc.ocp.fiercesw.network\"/host:  \"test-cjoc.ocp.fiercesw.network\"'"\n"'  tls:'"\n"'    termination: edge'"\n"'    insecureEdgeTerminationPolicy: Redirect/g' < cloudbees-core-working.yml > tmp && mv tmp cloudbees-core-working.yml
+    sed -e 's/host:  \"$OCP_CJOC_ROUTE\"/host:  \"$OCP_CJOC_ROUTE\"'"\n"'  tls:'"\n"'    termination: edge'"\n"'    insecureEdgeTerminationPolicy: Redirect/g' < cloudbees-core-working.yml > tmp && mv tmp cloudbees-core-working.yml
 else
     cd $CBC_OCP_WORK_DIR && tar zxvf cjoc.tgz && cd cloudbees-core_* && \
     sed -e s,http://cloudbees-core,https://cloudbees-core,g < cloudbees-core.yml > tmp && mv tmp cloudbees-core-working.yml && \
@@ -197,7 +202,7 @@ echo -e "\n=====================================================================
 echo "Sending plugin stuffer to CJOC pod..."
 oc $OC_ARG_OPTIONS exec cjoc-0 -- curl -L -sS -o /var/jenkins_home/cjoc-plugin-stuffer.sh https://raw.githubusercontent.com/FierceSoftware/devsecops-workshop-wizbang/master/cloudbees-core/cjoc-plugin-stuffer.sh
 oc $OC_ARG_OPTIONS exec cjoc-0 -- chmod +x /var/jenkins_home/cjoc-plugin-stuffer.sh
-oc $OC_ARG_OPTIONS exec cjoc-0 -- /var/jenkins_home/cjoc-plugin-stuffer.sh openshift-client workflow-scm-step workflow-api jsch workflow-job workflow-multibranch branch-api workflow-support pipeline-stage-step pipeline-input-step pipeline-graph-analysis pipeline-milestone-step pipeline-rest-api pipeline-build-step momentjs handlebars pipeline-stage-view workflow-durable-task-step pipeline-model-api pipeline-model-extensions pipeline-model-declarative-agent pipeline-stage-tags-metadata git-server workflow-cps-global-lib docker-workflow rocketchatnotifier lockable-resources workflow-basic-steps workflow-cps openshift-sync openshift-pipeline
+oc $OC_ARG_OPTIONS exec cjoc-0 -- /var/jenkins_home/cjoc-plugin-stuffer.sh openshift-client workflow-scm-step workflow-api jsch durable-task workflow-job workflow-multibranch branch-api workflow-support pipeline-stage-step pipeline-input-step pipeline-graph-analysis pipeline-milestone-step pipeline-rest-api pipeline-build-step momentjs handlebars pipeline-stage-view workflow-durable-task-step pipeline-model-api pipeline-model-extensions pipeline-model-declarative-agent pipeline-stage-tags-metadata git-server git git-client workflow-cps-global-lib docker-workflow rocketchatnotifier lockable-resources workflow-basic-steps workflow-cps openshift-sync openshift-pipeline
 
 echo -e "\n================================================================================"
 echo "Read the default Admin password with:"

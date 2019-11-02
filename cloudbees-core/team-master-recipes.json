@@ -136,6 +136,7 @@
           "momentjs",
           "handlebars",
           "pipeline-stage-view",
+          "durable-task",
           "workflow-durable-task-step",
           "pipeline-model-api",
           "pipeline-model-extensions",
