@@ -45,7 +45,7 @@ The first part will deploy the OpenShift manifests needed to run CloudBees Core.
 7. Next, navigate to ***Manage Jenkins > Configure Security*** then scroll down to ***CSRF Protection > Crumb Algorithm*** and check the ***Enable proxy compatibility*** box - this is so CJOC operates properly behind the OCP LoadBalancer/Router
 8. Click ***Apply***, reload the page, and then click ***Save***
 
-We now have the required manual steps done in order to proceed with the deployer.  Please continue with the deployment script and then configure LDAP/RBAC afterwards.
+We now have the required manual steps done in order to proceed with the deployer.  Please continue with the deployment script and then configure LDAP/RBAC afterwards.  Just go back to the deployer script, press ***Y***, wait a few seconds, then go about configuring LDAP below.
 
 ### Setting up LDAP - Stuffing Certificates
 If you deployed RH IDM/LDAP with this repo's provisioner then it's using self-signed certificates which means you need to stuff them into the JRE keystore.  I fucking hate Java...
@@ -99,5 +99,3 @@ So the LDAP groups don't automatically map to Jenkins groups and...yeah, whateve
 2. Because LDAP and Jenkins have an overlapping admin user, we need to manually add the ***admin*** user to the ***Administrators*** group.  Do that.
 3. Next, add the ***ipausers*** group to the ***Developers*** group.
 4. That should be about it, but what do I know...
-
-If you're running these steps as part of the "Automated" deployment process, continue back to the deployer now.
