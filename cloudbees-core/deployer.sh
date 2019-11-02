@@ -67,7 +67,7 @@ function continueWithCJOCConfig {
 
     echo -e "\n================================================================================"
     echo "Safely restarting CJOC..."
-    
+
     java -jar $CBC_OCP_WORK_DIR/jenkins-cli.jar -s "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/" safe-restart
 
 
@@ -165,7 +165,7 @@ if [ "$OCP_CJOC_ROUTE_EDGE_TLS" = "true" ]; then
     sed -e s,http://cloudbees-core,https://cloudbees-core,g < cloudbees-core.yml > tmp && mv tmp cloudbees-core-working.yml && \
     sed -e s,cloudbees-core.example.com,$OCP_CJOC_ROUTE,g < cloudbees-core-working.yml > tmp && mv tmp cloudbees-core-working.yml && \
     sed -e s,myproject,$OCP_PROJECT_NAME,g < cloudbees-core-working.yml > tmp && mv tmp cloudbees-core-working.yml && \
-    sed -e 's/host:  \"$OCP_CJOC_ROUTE\"/host:  \"$OCP_CJOC_ROUTE\"'"\n"'  tls:'"\n"'    termination: edge'"\n"'    insecureEdgeTerminationPolicy: Redirect/g' < cloudbees-core-working.yml > tmp && mv tmp cloudbees-core-working.yml
+    sed -e 's/host: /tls:'"\n"'    termination: edge'"\n"'    insecureEdgeTerminationPolicy: Redirect'"\n"'  host: /g' < cloudbees-core-working.yml > tmp && mv tmp cloudbees-core-working.yml
 else
     cd $CBC_OCP_WORK_DIR && tar zxvf cjoc.tgz && cd cloudbees-core_* && \
     sed -e s,http://cloudbees-core,https://cloudbees-core,g < cloudbees-core.yml > tmp && mv tmp cloudbees-core-working.yml && \
