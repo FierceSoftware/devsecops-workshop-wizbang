@@ -36,4 +36,9 @@ And answer the prompts to deploy the full CloudBees Core integrated into OCP sta
 When running the ```deployer.sh``` script, you'll find it's run in two sections.
 The first part will deploy the OpenShift manifests needed to run CloudBees Core.  Once it it deployed, you need to manually finish the Setup Wizard and run some other steps.  These are those steps...
 
-1. 
+1. Login to the CloudBees Jenkins Operations Center (CJOC) by hitting the route set in deployment.
+2. Use the administrative password at the initial Setup Wizard prompt to continue
+3. I suggest Requesting a Trial License - it's seemless and easy, lets you see what CloudBees Core really can do.
+4. Install the Suggested Plugins
+5. For the deployment script to continue to the next phase, don't fill out **Create First Admin User** just click **Continue as admin** - otherwise you will need to modify the environmental variable for ```JENKINS_API_TOKEN``` to also be the same password and username you set as the first admin user you create.
+6. 
