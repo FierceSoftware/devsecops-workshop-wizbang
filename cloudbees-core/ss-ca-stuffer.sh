@@ -10,8 +10,8 @@ CUSTOM_TRUSTSTORE=$JENKINS_HOME/.cacerts
 if [ ! -f "$CUSTOM_TRUSTSTORE/cacerts" ]; then
     mkdir -p $CUSTOM_TRUSTSTORE
     cp $JAVA_HOME/jre/lib/security/cacerts $CUSTOM_TRUSTSTORE
-    chmod +w $CUSTOM_TRUSTSTORE/cacerts
 fi
+chmod +w $CUSTOM_TRUSTSTORE/cacerts
 
 for CERT in "$@"
 do
@@ -20,7 +20,14 @@ do
   CERTNAME=${FILENAME//"."/"-"}
   #echo "Q" | openssl s_client -connect ${CERT} 2>/dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > /tmp/$FILENAME.pem
   keytool -printcert -rfc -sslServer ${CERT} > /tmp/$FILENAME.pem
-  keytool -import -noprompt -storepass changeit -file /tmp/$FILENAME.pem -alias $CERTNAME -keystore $CUSTOM_TRUSTSTORE/cacerts
+  echp "Importing certificate to keystore..."
+  keytool -list -storepass changeit -keystore $CUSTOM_TRUSTSTORE/cacerts -alias $CERTNAME
+  if [ $? -eq 0 ]; then
+    echo "Certificate already exists, skipping..."
+  else
+    echo "Certificate not in keystore, importing..."
+    keytool -import -noprompt -storepass changeit -file /tmp/$FILENAME.pem -alias $CERTNAME -keystore $CUSTOM_TRUSTSTORE/cacerts 2>/dev/null
+  fi
 done
 
 chmod -w $CUSTOM_TRUSTSTORE/cacerts
