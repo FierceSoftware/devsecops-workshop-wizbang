@@ -20,7 +20,7 @@ do
   CERTNAME=${FILENAME//"."/"-"}
   #echo "Q" | openssl s_client -connect ${CERT} 2>/dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > /tmp/$FILENAME.pem
   keytool -printcert -rfc -sslServer ${CERT} > /tmp/$FILENAME.pem
-  keytool -import -noprompt -storepass changeit -file /tmp/$FILENAME.pem -alias $CERTNAME -keystore $JAVA_HOME/jre/lib/security/cacerts
+  keytool -import -noprompt -storepass changeit -file /tmp/$FILENAME.pem -alias $CERTNAME -keystore $CUSTOM_TRUSTSTORE/cacerts
 done
 
 chmod -w $CUSTOM_TRUSTSTORE/cacerts
