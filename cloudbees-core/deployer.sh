@@ -26,9 +26,6 @@ function promptToContinueAfterCJOCDeploy {
 }
 
 function continueWithCJOCConfig {
-    echo -e "\n================================================================================"
-    echo "Downloading Jenkins CLI now from CJOC..."
-    curl -L -sS -o "$CBC_OCP_WORK_DIR/jenkins-cli.jar" "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/jnlpJars/jenkins-cli.jar"
 
     export JENKINS_USER_ID="admin"
     export JENKINS_API_TOKEN=$JENKINS_ADMIN_PASS
@@ -38,6 +35,10 @@ function continueWithCJOCConfig {
     else
         export JENKINS_PROTOCOL_PREFIX="http"
     fi
+    
+    echo -e "\n================================================================================"
+    echo "Downloading Jenkins CLI now from CJOC..."
+    curl -L -sS -o "$CBC_OCP_WORK_DIR/jenkins-cli.jar" "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/jnlpJars/jenkins-cli.jar"
 
     echo -e "\n================================================================================"
     echo "Testing jenkins-cli..."

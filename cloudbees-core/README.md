@@ -11,7 +11,7 @@ Except, Red Hat unfortunately does not provide the best Jenkins.  It is out-date
 
 CloudBees Core is a managed, scalable, secure Jenkins and deploying on OCP is very easy.  Integrating it into OCP as the built-in Jenkins, that's a different story.
 
-##  Deployment - Automated
+##  Deployment - Automated-ish
 
 The deployment script ```./deploy.sh``` can also take preset environmental variables to provision without prompting the user.  To do so, copy over the ```example.vars.sh``` file, set the variables, source and run the deployer.
 
