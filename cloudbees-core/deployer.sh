@@ -28,7 +28,7 @@ function promptToContinueAfterCJOCDeploy {
 function continueWithCJOCConfig {
     echo -e "\n================================================================================"
     echo "Downloading Jenkins CLI now from CJOC..."
-    curl -L -sS -o "$CBC_OCP_WORK_DIR/jenkins-cli.jar" "JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/jnlpJars/jenkins-cli.jar"
+    curl -L -sS -o "$CBC_OCP_WORK_DIR/jenkins-cli.jar" "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/jnlpJars/jenkins-cli.jar"
 
     export JENKINS_USER_ID="admin"
     export JENKINS_API_TOKEN=$JENKINS_ADMIN_PASS
@@ -65,16 +65,17 @@ function continueWithCJOCConfig {
 
     java -jar $CBC_OCP_WORK_DIR/jenkins-cli.jar -s "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/" teams workshop-team --put < $CBC_OCP_WORK_DIR/workshop-team.fiercesw.network.json
 
-    echo -e "\n================================================================================"
+
+    echo -e "\n\n================================================================================"
+    echo -e "Finished with deploying Cloudbees Core!\n Now feel free to finish configuring LDAP/RBAC"
+
+    echo -e "\n\n================================================================================"
     read -p "Clean up and delete tmp directory? [N/y] " -n 1 -r
     echo ""
     if [[ $REPLY =~ ^[Yy]$ ]]
     then
         rm -rf $CBC_OCP_WORK_DIR
     fi
-
-    echo -e "\n================================================================================"
-    echo -e "Finished with deploying Cloudbees Core!\n Now feel free to finish configuring LDAP/RBAC"
 }
 
 ## Integrate LDAP to CJOC
