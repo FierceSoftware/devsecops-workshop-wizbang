@@ -41,4 +41,16 @@ The first part will deploy the OpenShift manifests needed to run CloudBees Core.
 3. I suggest Requesting a Trial License - it's seemless and easy, lets you see what CloudBees Core really can do.
 4. Install the Suggested Plugins
 5. For the deployment script to continue to the next phase, don't fill out **Create First Admin User** just click **Continue as admin** - otherwise you will need to modify the environmental variable for ```JENKINS_API_TOKEN``` to also be the same password and username you set as the first admin user you create.
-6. 
+6. Click Save and Finish
+7. Next, navigate to ***Manage Jenkins > Configure Security*** then scroll down to ***CSRF Protection > Crumb Algorithm*** and check the ***Enable proxy compatibility*** box - this is so CJOC operates properly behind the OCP LoadBalancer/Router
+8. At this same screen you may also specify the LDAP server to connect to.  ***NOTE:***  If you deployed RH IDM/LDAP with this repo's provisioner then it's using self-signed certificates which means you need to stuff them into the JRE keystore.  I fucking hate Java...
+
+### Setting up LDAP - Stuffing Certificates
+The easiest way to do this is to call the ```ss-ca-stuffer.sh``` script with a host that you'd like to pull the cert from, such as the following:
+
+```
+$ oc exec cjoc-0 -- curl -L -sS -o /var/jenkins_home/ss-ca-stuffer.sh 
+$ oc exec cjoc-0 -- /var/jenkins_home/ss-ca-stuffer.sh idm.example.com:636
+```
+
+That will copy over the script and run a few commands that'll pull it into your CJOC JRE keystore.
