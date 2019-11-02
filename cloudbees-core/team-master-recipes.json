@@ -81,7 +81,6 @@
         "name": "ocp-java-nodejs",
         "displayName": "OpenShift - Java & NodeJS Development",
         "description": "The essential tools to build, release and deploy Java Web applications including integration with Maven, Gradle and Node JS.",
-        "pluginCatalog": "additional-openshift-workshop-plugins",
         "plugins": [
           "bluesteel-master",
           "cloudbees-folders-plus",
