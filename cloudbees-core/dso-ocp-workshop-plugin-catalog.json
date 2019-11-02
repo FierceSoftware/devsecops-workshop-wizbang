@@ -10,41 +10,101 @@
                 "openshift-client": {
                     "url" : "https://updates.jenkins.io/latest/openshift-client.hpi"
                 },
-                "pipeline-build-step": {
-                    "url" : "https://updates.jenkins.io/latest/pipeline-build-step.hpi"
+                "workflow-scm-step": {
+                    "url" : "https://updates.jenkins.io/latest/workflow-scm-step.hpi"
                 },
-                "pipeline-input-step": {
-                    "url" : "https://updates.jenkins.io/latest/pipeline-input-step.hpi"
+                "workflow-api": {
+                    "url" : "https://updates.jenkins.io/latest/workflow-api.hpi"
                 },
-                "pipeline-milestone-step": {
-                    "url" : "https://updates.jenkins.io/latest/pipeline-milestone-step.hpi"
+                "jsch": {
+                    "url" : "https://updates.jenkins.io/latest/jsch.hpi"
+                },
+                "workflow-job": {
+                    "url" : "https://updates.jenkins.io/latest/workflow-job.hpi"
+                },
+                "workflow-multibranch": {
+                    "url" : "https://updates.jenkins.io/latest/workflow-multibranch.hpi"
+                },
+                "branch-api": {
+                    "url" : "https://updates.jenkins.io/latest/branch-api.hpi"
+                },
+                "workflow-support": {
+                    "url" : "https://updates.jenkins.io/latest/workflow-support.hpi"
                 },
                 "pipeline-stage-step": {
                     "url" : "https://updates.jenkins.io/latest/pipeline-stage-step.hpi"
                 },
+                "pipeline-input-step": {
+                    "url" : "https://updates.jenkins.io/latest/pipeline-input-step.hpi"
+                },
                 "pipeline graph-analysis": {
                     "url" : "https://updates.jenkins.io/latest/pipeline graph-analysis.hpi"
+                },
+                "pipeline-milestone-step": {
+                    "url" : "https://updates.jenkins.io/latest/pipeline-milestone-step.hpi"
                 },
                 "pipeline-rest-api": {
                     "url" : "https://updates.jenkins.io/latest/pipeline-rest-api.hpi"
                 },
+                "pipeline-build-step": {
+                    "url" : "https://updates.jenkins.io/latest/pipeline-build-step.hpi"
+                },
+                "momentjs": {
+                    "url" : "https://updates.jenkins.io/latest/momentjs.hpi"
+                },
+                "handlebars": {
+                    "url" : "https://updates.jenkins.io/latest/handlebars.hpi"
+                },
                 "pipeline-stage-view": {
                     "url" : "https://updates.jenkins.io/latest/pipeline-stage-view.hpi"
                 },
-                "pipeline-model-definition": {
-                    "url" : "https://updates.jenkins.io/latest/pipeline-model-definition.hpi"
+                "workflow-durable-task-step": {
+                    "url" : "https://updates.jenkins.io/latest/workflow-durable-task-step.hpi"
+                },
+                "pipeline-model-api": {
+                    "url" : "https://updates.jenkins.io/latest/pipeline-model-api.hpi"
+                },
+                "pipeline-model-extensions": {
+                    "url" : "https://updates.jenkins.io/latest/pipeline-model-extensions.hpi"
+                },
+                "pipeline-model-declarative-agent": {
+                    "url" : "https://updates.jenkins.io/latest/pipeline-model-declarative-agent.hpi"
+                },
+                "pipeline-stage-tags-metadata": {
+                    "url" : "https://updates.jenkins.io/latest/pipeline-stage-tags-metadata.hpi"
+                },
+                "git": {
+                    "url" : "https://updates.jenkins.io/latest/git.hpi"
+                },
+                "git-client": {
+                    "url" : "https://updates.jenkins.io/latest/git-client.hpi"
                 },
                 "git-server": {
                     "url" : "https://updates.jenkins.io/latest/git-server.hpi"
                 },
-                "lockable-resources": {
-                    "url" : "https://updates.jenkins.io/latest/lockable-resources.hpi"
-                },
                 "workflow-cps-global-lib": {
                     "url" : "https://updates.jenkins.io/latest/workflow-cps-global-lib.hpi"
                 },
-                "workflow-aggrigator": {
-                    "url" : "https://updates.jenkins.io/latest/workflow-aggrigator.hpi"
+                "docker-workflow": {
+                    "url" : "https://updates.jenkins.io/latest/docker-workflow.hpi"
+                },
+                "pipeline-model-definition": {
+                    "url" : "https://updates.jenkins.io/latest/pipeline-model-definition.hpi"
+                },
+                "rocketchatnotifier": {
+                    "url" : "https://updates.jenkins.io/latest/rocketchatnotifier.hpi"
+                },
+                "lockable-resources": {
+                    "url" : "https://updates.jenkins.io/latest/lockable-resources.hpi"
+                },
+                "workflow-basic-steps": {
+                    "url" : "https://updates.jenkins.io/latest/workflow-basic-steps.hpi"
+                },
+                "workflow-cps": {
+                    "url" : "https://updates.jenkins.io/latest/workflow-cps.hpi"
+                },
+                "workflow-aggregator": {
+                    "url" : "https://updates.jenkins.io/latest/workflow-aggregator.hpi"
                 },
                 "openshift-sync": {
                     "url" : "https://updates.jenkins.io/latest/openshift-sync.hpi"

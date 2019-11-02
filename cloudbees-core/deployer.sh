@@ -9,7 +9,7 @@ export OCP_PASSWORD=${OCP_PASSWORD:=""}
 export OCP_CREATE_PROJECT=${OCP_CREATE_PROJECT:="true"}
 export OCP_PROJECT_NAME=${OCP_PROJECT_NAME:="cicd-pipeline"}
 export OCP_CJOC_ROUTE=${OCP_CJOC_ROUTE:="cjoc.ocp.example.com"}
-export OC_ARG_OPTIONS=${OC_ARG_OPTIONS=:=""}
+export OC_ARG_OPTIONS=${OC_ARG_OPTIONS:=""}
 
 ## Functions
 function promptToContinueAfterCJOCDeploy {
@@ -169,40 +169,38 @@ oc $OC_ARG_OPTIONS create -f https://raw.githubusercontent.com/kenmoini/jenkins-
 echo "Applying JBoss EAP 7.0 ImageStream..."
 oc $OC_ARG_OPTIONS create -f https://raw.githubusercontent.com/kenmoini/application-templates/master/eap/eap70-image-stream.json
 
-echo -e "\n================================================================================"
-echo -e "Downloading plugins...\n"
-echo "Downloading openshift-client..."
-curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.openshift-client.hpi" https://updates.jenkins.io/latest/openshift-client.hpi
-echo "Downloading pipeline-build-step..."
-curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.pipeline-build-step.hpi" https://updates.jenkins.io/latest/pipeline-build-step.hpi
-echo "Downloading pipeline-input-step..."
-curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.pipeline-input-step.hpi" https://updates.jenkins.io/latest/pipeline-input-step.hpi
-echo "Downloading pipeline-milestone-step..."
-curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.pipeline-milestone-step.hpi" https://updates.jenkins.io/latest/pipeline-milestone-step.hpi
-echo "Downloading pipeline-stage-step..."
-curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.pipeline-stage-step.hpi" https://updates.jenkins.io/latest/pipeline-stage-step.hpi
-echo "Downloading pipeline-graph-analysis..."
-curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.pipeline-graph-analysis.hpi" https://updates.jenkins.io/latest/pipeline-graph-analysis.hpi
-echo "Downloading pipeline-rest-api..."
-curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.pipeline-rest-api.hpi" https://updates.jenkins.io/latest/pipeline-rest-api.hpi
-echo "Downloading pipeline-stage-view..."
-curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.pipeline-stage-view.hpi" https://updates.jenkins.io/latest/pipeline-stage-view.hpi
-echo "Downloading pipeline-graph-analysis..."
-curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.pipeline-graph-analysis.hpi" https://updates.jenkins.io/latest/pipeline-graph-analysis.hpi
-echo "Downloading pipeline-model-definition..."
-curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.pipeline-model-definition.hpi" https://updates.jenkins.io/latest/pipeline-model-definition.hpi
-echo "Downloading git-server..."
-curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.git-server.hpi" https://updates.jenkins.io/latest/git-server.hpi
-echo "Downloading lockable-resources..."
-curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.lockable-resources.hpi" https://updates.jenkins.io/latest/lockable-resources.hpi
-echo "Downloading workflow-cps-global-lib..."
-curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.workflow-cps-global-lib.hpi" https://updates.jenkins.io/latest/workflow-cps-global-lib.hpi
-echo "Downloading workflow-aggrigator..."
-curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.workflow-aggrigator.hpi" https://updates.jenkins.io/latest/workflow-aggrigator.hpi
-echo "Downloading openshift-sync..."
-curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.openshift-sync.hpi" https://updates.jenkins.io/latest/openshift-sync.hpi
-echo "Downloading openshift-pipeline..."
-curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.openshift-pipeline.hpi" https://updates.jenkins.io/latest/openshift-pipeline.hpi
+#echo -e "\n================================================================================"
+#echo -e "Downloading plugins...\n"
+#echo "Downloading openshift-client..."
+#curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.openshift-client.hpi" https://updates.jenkins.io/latest/openshift-client.hpi
+#echo "Downloading pipeline-build-step..."
+#curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.pipeline-build-step.hpi" https://updates.jenkins.io/latest/pipeline-build-step.hpi
+#echo "Downloading pipeline-input-step..."
+#curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.pipeline-input-step.hpi" https://updates.jenkins.io/latest/pipeline-input-step.hpi
+#echo "Downloading pipeline-milestone-step..."
+#curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.pipeline-milestone-step.hpi" https://updates.jenkins.io/latest/pipeline-milestone-step.hpi
+#echo "Downloading pipeline-stage-step..."
+#curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.pipeline-stage-step.hpi" https://updates.jenkins.io/latest/pipeline-stage-step.hpi
+#echo "Downloading pipeline-graph-analysis..."
+#curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.pipeline-graph-analysis.hpi" https://updates.jenkins.io/latest/pipeline-graph-analysis.hpi
+#echo "Downloading pipeline-rest-api..."
+#curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.pipeline-rest-api.hpi" https://updates.jenkins.io/latest/pipeline-rest-api.hpi
+#echo "Downloading pipeline-stage-view..."
+#curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.pipeline-stage-view.hpi" https://updates.jenkins.io/latest/pipeline-stage-view.hpi
+#echo "Downloading pipeline-graph-analysis..."
+#curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.pipeline-graph-analysis.hpi" https://updates.jenkins.io/latest/pipeline-graph-analysis.hpi
+#echo "Downloading pipeline-model-definition..."
+#curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.pipeline-model-definition.hpi" https://updates.jenkins.io/latest/pipeline-model-definition.hpi
+#echo "Downloading git-server..."
+#curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.git-server.hpi" https://updates.jenkins.io/latest/git-server.hpi
+#echo "Downloading lockable-resources..."
+#curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.lockable-resources.hpi" https://updates.jenkins.io/latest/lockable-resources.hpi
+#echo "Downloading workflow-cps-global-lib..."
+#curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.workflow-cps-global-lib.hpi" https://updates.jenkins.io/latest/workflow-cps-global-lib.hpi
+#echo "Downloading openshift-sync..."
+#curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.openshift-sync.hpi" https://updates.jenkins.io/latest/openshift-sync.hpi
+#echo "Downloading openshift-pipeline..."
+#curl -L -sS -o "$CBC_OCP_WORK_DIR/plugin.openshift-pipeline.hpi" https://updates.jenkins.io/latest/openshift-pipeline.hpi
 
 echo -e "\n================================================================================"
 echo -e "Deploying Cloudbees Core...\n"
@@ -215,6 +213,7 @@ sleep 120
 echo -e "\n================================================================================"
 echo "Adding admin role to jenkins service account..."
 oc $OC_ARG_OPTIONS policy add-role-to-user admin system:serviceaccount:$OCP_PROJECT_NAME:jenkins
+oc $OC_ARG_OPTIONS policy add-role-to-user admin system:serviceaccount:$OCP_PROJECT_NAME:cjoc
 
 echo -e "\n================================================================================"
 echo "Read the default Admin password with:"
