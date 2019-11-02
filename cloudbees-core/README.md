@@ -49,7 +49,7 @@ The first part will deploy the OpenShift manifests needed to run CloudBees Core.
 The easiest way to do this is to call the ```ss-ca-stuffer.sh``` script with a host that you'd like to pull the cert from, such as the following:
 
 ```
-$ oc exec cjoc-0 -- curl -L -sS -o /var/jenkins_home/ss-ca-stuffer.sh 
+$ oc exec cjoc-0 -- curl -L -sS -o /var/jenkins_home/ss-ca-stuffer.sh https://raw.githubusercontent.com/FierceSoftware/devsecops-workshop-wizbang/master/cloudbees-core/ss-ca-stuffer.sh
 $ oc exec cjoc-0 -- /var/jenkins_home/ss-ca-stuffer.sh idm.example.com:636
 ```
 
