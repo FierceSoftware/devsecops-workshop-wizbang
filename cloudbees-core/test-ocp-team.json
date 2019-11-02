@@ -1,0 +1,20 @@
+{
+    "data": {
+        "displayName": "OCP Test from CLI",
+        "icon": {
+            "color": "#dd6669",
+            "name": "tiger"
+        },
+        "members": [
+            {
+                "id": "admin",
+                "roles": [
+                    "TEAM_ADMIN"
+                ]
+            }
+        ],
+        "name": "ocp-test-from-cli",
+        "provisioningRecipe": "ocp-java-nodejs"
+    },
+    "version": "1"
+}

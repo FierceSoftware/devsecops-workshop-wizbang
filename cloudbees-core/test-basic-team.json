@@ -1,0 +1,20 @@
+{
+    "data": {
+        "displayName": "Test from CLI",
+        "icon": {
+            "color": "#dd6669",
+            "name": "hexagons"
+        },
+        "members": [
+            {
+                "id": "admin",
+                "roles": [
+                    "TEAM_ADMIN"
+                ]
+            }
+        ],
+        "name": "test-from-cli",
+        "provisioningRecipe": "basic"
+    },
+    "version": "1"
+}

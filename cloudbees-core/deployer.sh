@@ -35,7 +35,7 @@ function continueWithCJOCConfig {
     else
         export JENKINS_PROTOCOL_PREFIX="http"
     fi
-    
+
     echo -e "\n================================================================================"
     echo "Downloading Jenkins CLI now from CJOC..."
     curl -L -sS -o "$CBC_OCP_WORK_DIR/jenkins-cli.jar" "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/jnlpJars/jenkins-cli.jar"
@@ -64,7 +64,7 @@ function continueWithCJOCConfig {
 
     curl -L -sS -o $CBC_OCP_WORK_DIR/workshop-team.fiercesw.network.json https://raw.githubusercontent.com/FierceSoftware/devsecops-workshop-wizbang/master/cloudbees-core/workshop-team.fiercesw.network.json
 
-    java -jar $CBC_OCP_WORK_DIR/jenkins-cli.jar -s "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/" teams workshop-team --put < $CBC_OCP_WORK_DIR/workshop-team.fiercesw.network.json
+    java -jar $CBC_OCP_WORK_DIR/jenkins-cli.jar -s "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/" teams "workshop-team" --put < $CBC_OCP_WORK_DIR/workshop-team.fiercesw.network.json
 
     echo -e "\n================================================================================"
     echo "Safely restarting CJOC..."
@@ -203,7 +203,7 @@ echo -e "\n=====================================================================
 echo "Sending plugin stuffer to CJOC pod..."
 oc $OC_ARG_OPTIONS exec cjoc-0 -- curl -L -sS -o /var/jenkins_home/cjoc-plugin-stuffer.sh https://raw.githubusercontent.com/FierceSoftware/devsecops-workshop-wizbang/master/cloudbees-core/cjoc-plugin-stuffer.sh
 oc $OC_ARG_OPTIONS exec cjoc-0 -- chmod +x /var/jenkins_home/cjoc-plugin-stuffer.sh
-oc $OC_ARG_OPTIONS exec cjoc-0 -- /var/jenkins_home/cjoc-plugin-stuffer.sh openshift-client workflow-scm-step workflow-api jsch durable-task workflow-job workflow-multibranch branch-api workflow-support pipeline-stage-step pipeline-input-step pipeline-graph-analysis pipeline-milestone-step pipeline-rest-api pipeline-build-step momentjs handlebars pipeline-stage-view workflow-durable-task-step pipeline-model-api pipeline-model-extensions pipeline-model-declarative-agent pipeline-stage-tags-metadata git-server git git-client workflow-cps-global-lib docker-workflow rocketchatnotifier lockable-resources workflow-basic-steps workflow-cps openshift-sync openshift-pipeline
+oc $OC_ARG_OPTIONS exec cjoc-0 -- /var/jenkins_home/cjoc-plugin-stuffer.sh openshift-client workflow-scm-step workflow-api jsch durable-task workflow-job workflow-multibranch branch-api workflow-support pipeline-stage-step pipeline-input-step pipeline-graph-analysis pipeline-milestone-step pipeline-rest-api pipeline-build-step momentjs handlebars pipeline-stage-view workflow-durable-task-step pipeline-model-api pipeline-model-extensions pipeline-model-definition pipeline-model-declarative-agent pipeline-stage-tags-metadata git-server git git-client workflow-cps-global-lib docker-workflow rocketchatnotifier lockable-resources workflow-basic-steps workflow-cps openshift-sync openshift-pipeline
 
 echo -e "\n================================================================================"
 echo "Read the default Admin password with:"
