@@ -50,7 +50,50 @@ The easiest way to do this is to call the ```ss-ca-stuffer.sh``` script with a h
 
 ```
 $ oc exec cjoc-0 -- curl -L -sS -o /var/jenkins_home/ss-ca-stuffer.sh https://raw.githubusercontent.com/FierceSoftware/devsecops-workshop-wizbang/master/cloudbees-core/ss-ca-stuffer.sh
+$ oc exec cjoc-0 -- chmod +x /var/jenkins_home/ss-ca-stuffer.sh
 $ oc exec cjoc-0 -- /var/jenkins_home/ss-ca-stuffer.sh idm.example.com:636
 ```
 
-That will copy over the script and run a few commands that'll pull it into your CJOC JRE keystore.
+That will copy over the script and run a few commands that'll pull it into your CJOC JRE keystore.  However, you're not done yet because on OpenShift containers don't run as root and you can't write to the system keystore :)
+Instead, that script will create a copy of the system keystore in a writable path at ```$JENKINS_HOME/.cacerts/cacerts```.  In order for CJOC to load the custom keystore it must be added to the JAVA_OPTS on the CJOC StatefulSet...
+You can do this a few different ways - by modifying the ```cloudbees-core-working.yml``` file that was used to deploy this and then reapply it to the cluster to update the manifest, or by just modifying it in the Web UI.  That's way easier and faster.
+In the OCP Web UI, navigate to the project, click on the StatefulSet, then in the ***Actions*** drop down to the right click ***Edit YAML***
+Then find the CJOC container's ```env``` definitions in the manifest and modify the ```JAVA_OPTS``` value, add the following lines to the end:
+```
+-Djavax.net.ssl.trustStore=$JENKINS_HOME/.cacerts/cacerts
+-Djavax.net.ssl.trustStorePassword=changeit
+```
+Then click ***Save***.  Wait a few moments and with any luck, CJOC will restart and JavaX will consume the new CA Certificate keystore that now includes your self-signed IDM certificate, allowing the connection of LDAPS.
+
+### Setting up LDAP - Configuring LDAP
+Once you have the custom keystore set up you can continue with configuring LDAP over LDAPS.  *Reminder: Don't use LDAP since you'll be screaming your passwords in plain-text over the Internet :)*
+
+1. With CJOC reloaded, log in as admin and navigate to ***Manage Jenkins > Configure Global Security***.
+2. Select the ***LDAP*** radio
+3. Go ahead and click on that ***Advanced Server Configuration...*** button
+4. Configure with the following settings:
+
+  - ***Server:***  ldaps://idm.example.com:636
+  - ***root DN:*** dc=example,dc=com
+  - ***User search base:*** cn=accounts
+  - ***User search filter:*** uid={0}
+  - ***Group search base:*** cn=groups,cn=accounts
+  - ***Group membership:*** Select *Search for LDAP groups container user*
+  - ***Group membership attribute:*** (| (member={0}) (uniqueMember={0}) (memberUid={1}))
+  - ***Manager DN:*** cn=Directory Manager
+  - ***Manager Password:*** lol_idk_my_bff_jill?
+  - ***Display Name LDAP Attribute:*** displayname
+  - ***Email Address LDAP Attribute:*** mail
+5. Under the ***Authorization*** Field, select the *Role-based matrix authorization strategy* radio option
+6. For the ***Import strategy*** select *Typical initial setup*
+7. Click ***Apply*** then ***Save***
+
+### Setting up LDAP - RBAC
+So the LDAP groups don't automatically map to Jenkins groups and...yeah, whatever, no one does LDAP right and I'm tired of it.  Let's just get the show on with it now...
+
+1. In the left hand pane click on the new ***Groups*** link
+2. Because LDAP and Jenkins have an overlapping admin user, we need to manually add the ***admin*** user to the ***Administrators*** group.  Do that.
+3. Next, add the ***ipausers*** group to the ***Developers*** group.
+4. That should be about it, but what do I know...
+
+If you're running these steps as part of the "Automated" deployment process, continue back to the deployer now.
