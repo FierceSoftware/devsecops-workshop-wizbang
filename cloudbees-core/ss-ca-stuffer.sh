@@ -5,6 +5,14 @@
 set -e
 ## set -x	## Uncomment for debugging
 
+## check for custom keystore
+CUSTOM_TRUSTSTORE=$JENKINS_HOME/.cacerts
+if [ ! -f "$CUSTOM_TRUSTSTORE/cacerts" ]; then
+    mkdir -p $CUSTOM_TRUSTSTORE
+    cp $JAVA_HOME/jre/lib/security/cacerts $CUSTOM_TRUSTSTORE
+    chmod +w $CUSTOM_TRUSTSTORE/cacerts
+fi
+
 for CERT in "$@"
 do
   echo "Pulling SSL certificate for ${CERT}..."
@@ -14,3 +22,5 @@ do
   keytool -printcert -rfc -sslServer ${CERT} > /tmp/$FILENAME.pem
   keytool -import -noprompt -storepass changeit -file /tmp/$FILENAME.pem -alias $CERTNAME -keystore $JAVA_HOME/jre/lib/security/cacerts
 done
+
+chmod -w $CUSTOM_TRUSTSTORE/cacerts
