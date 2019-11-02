@@ -11,6 +11,5 @@ echo -e "Starting plugin downloads...\n"
 for PLUGIN in "$@"
 do
   echo "Pulling plugin file for ${PLUGIN}..."
-  cd $JENKINS_HOME/plugins && \
-  wget "https://updates.jenkins.io/latest/${PLUGIN}.hpi"
+  wget -O "$JENKINS_HOME/plugins/${PLUGIN}.jpi" "https://updates.jenkins.io/latest/${PLUGIN}.hpi"
 done
