@@ -46,6 +46,15 @@ function continueWithCJOCConfig {
     java -jar $CBC_OCP_WORK_DIR/jenkins-cli.jar -s "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/" who-am-i
 
     echo -e "\n================================================================================"
+    echo "Safely restarting CJOC...for safe measure..."
+
+    java -jar $CBC_OCP_WORK_DIR/jenkins-cli.jar -s "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/" safe-restart
+
+    echo -e "\n================================================================================"
+    echo "Sleeping for 120s while CJOC restarts...don't touch it yet..."
+    sleep 120
+
+    echo -e "\n================================================================================"
     echo "Pushing Plugin Catalog to CJOC..."
 
     curl -L -sS -o $CBC_OCP_WORK_DIR/dso-ocp-workshop-plugin-catalog.json https://raw.githubusercontent.com/FierceSoftware/devsecops-workshop-wizbang/master/cloudbees-core/dso-ocp-workshop-plugin-catalog.json
@@ -60,16 +69,32 @@ function continueWithCJOCConfig {
     java -jar $CBC_OCP_WORK_DIR/jenkins-cli.jar -s "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/" team-creation-recipes --put < $CBC_OCP_WORK_DIR/team-master-recipes.json
 
     echo -e "\n================================================================================"
-    echo "Creating Team..."
-
-    curl -L -sS -o $CBC_OCP_WORK_DIR/workshop-team.fiercesw.network.json https://raw.githubusercontent.com/FierceSoftware/devsecops-workshop-wizbang/master/cloudbees-core/workshop-team.fiercesw.network.json
-
-    java -jar $CBC_OCP_WORK_DIR/jenkins-cli.jar -s "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/" teams "workshop-team" --put < $CBC_OCP_WORK_DIR/workshop-team.fiercesw.network.json
-
-    echo -e "\n================================================================================"
     echo "Safely restarting CJOC..."
 
     java -jar $CBC_OCP_WORK_DIR/jenkins-cli.jar -s "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/" safe-restart
+
+    echo -e "\n================================================================================"
+    echo "Sleeping for 120s while CJOC restarts...still don't touch it..."
+    sleep 120
+
+    echo -e "\n================================================================================"
+    echo "Command to create Team:"
+
+    curl -L -sS -o $CBC_OCP_WORK_DIR/workshop-team.fiercesw.network.json https://raw.githubusercontent.com/FierceSoftware/devsecops-workshop-wizbang/master/cloudbees-core/workshop-team.fiercesw.network.json
+
+    echo 'java -jar '$CBC_OCP_WORK_DIR'/jenkins-cli.jar -auth admin:'$JENKINS_ADMIN_PASS' -s "'$JENKINS_PROTOCOL_PREFIX'://'$OCP_CJOC_ROUTE'/cjoc/" teams "workshop-team" --put < '$CBC_OCP_WORK_DIR'/workshop-team.fiercesw.network.json'
+
+    echo -e "\n================================================================================"
+    echo -e "\n Use the above command to create your workshop Team when the rest of your integration configuration is set - the Team Master will inherit the K8s/OCP/RocketChat configuration."
+    echo -e "\n If you set LDAP, don't log in with admin before deploying the Team Master, it will cause issues with the profiles being merged."
+    ## So we dont sleep and restart because a) why? and b) it kills things...
+    ## echo "Sleeping for 180s while TM starts...gotta get dem pluginz..."
+    ## sleep 180
+
+    ## echo -e "\n================================================================================"
+    ## echo "Safely restarting CJOC..."
+
+    ## java -jar $CBC_OCP_WORK_DIR/jenkins-cli.jar -s "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/" safe-restart
 
 
     echo -e "\n\n================================================================================"
