@@ -1,14 +1,19 @@
-# All-Star Software World Wide Presents: DevSecOps Workshops
+# All-Star Software, a partially owned subsidiary of Prestige World Wide Presents: DevSecOps Workshops
+
 ## Featuring:
+
 - The Public Cloud!
 - Red Hat Identity Management for LDAP
 - Red Hat OpenShift Container Platform
 - CloudBees Core
 - GitLab
-- Sonatype
+- Sonatype Nexus
+- Sonatype IQ Server
 - SonarQube
 - SysDig
 - Rocket.Chat
+- Eclipse Che
+- 3 Pipeline examples!
 
 ## How to Use
 
@@ -165,8 +170,27 @@ That will run the gitlab-rake command need to copy over the repos into the users
 
 See the ```cloudbees-core/``` subdirectory for updated deployment methods
 
+## Deploying Shared Workshop Resources
 
-# LEGACY SHIT DON'T LOOK BUT I DON'T WANNA FORGET IN CASE I NEED IT
+There are a number of resources that are shared across the workshop and they are provisioned in a central OpenShift Project.
+In this centrally shared project, you can find Templates deployed to allow workshop users to quickly "order" things such as Eclipse Che, some sample applications and pipelines, and other usefuly resources that can quickly be ordered and provisioned.
+
+The resources available are:
+
+- [Template] Eclipse Che - Single User
+- [Template] Demo App & Pipeline #1 - [Embedded OSS Jenkins Demo](https://github.com/kenmoini/demo-app-slide-deck)
+
+To deploy these resources, simply run the following provisioner:
+
+```
+$ ./shared-resource-project.provisioner.sh
+```
+
+Answer the prompts, and it'll deploy the resources.  Then log into OCP, and you should be able to "Select from Project", navigate to the shared project, and order from its catalog of Templates.
+
+***
+
+### *LEGACY SHIT DON'T LOOK BUT I DON'T WANNA FORGET IN CASE I NEED IT*
 
 ### Getting CloudBees Core to play nice with OCP
 

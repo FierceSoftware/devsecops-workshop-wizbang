@@ -109,8 +109,6 @@ function continueWithCJOCConfig {
     fi
 }
 
-## Integrate LDAP to CJOC
-
 ## Make the script interactive to set the variables
 if [ "$INTERACTIVE" = "true" ]; then
     
