@@ -43,7 +43,7 @@ The first part will deploy the OpenShift manifests needed to run CloudBees Core.
 4. Install the Suggested Plugins
 5. For the deployment script to continue to the next phase, don't fill out **Create First Admin User** just click **Continue as admin** - otherwise you will need to modify the environmental variable for ```JENKINS_API_TOKEN``` to also be the same password and username you set as the first admin user you create.
 6. Click ***Save*** and ***Finish***
-7. Next, navigate to ***Manage Jenkins > Configure Security*** then scroll down to ***CSRF Protection > Prevent Cross Site Request Forgery exploits*** and uncheck the box - this is only until the rest of the system is configured and the Team Master is deployed.  Jenkins has issues behind a LoadBalancer.
+7. Next, navigate to ***Manage Jenkins > Configure Global Security*** then scroll down to ***CSRF Protection > Prevent Cross Site Request Forgery exploits*** and uncheck the box - this is only until the rest of the system is configured and the Team Master is deployed.  Jenkins has issues behind a LoadBalancer.
 8. Click ***Apply***, reload the page, and then click ***Save***
 9. Return to the terminal with your waiting deployment script, press ***Y*** to continue.
 
