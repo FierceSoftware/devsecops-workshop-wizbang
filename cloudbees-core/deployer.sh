@@ -4,8 +4,12 @@
 export CBC_OCP_WORK_DIR="/tmp/cbc-ocp"
 export INTERACTIVE=${INTERACTIVE:="true"}
 export OCP_HOST=${OCP_HOST:=""}
+## userpass or token
+export OCP_AUTH_TYPE=${OCP_AUTH_TYPE:="userpass"}
+export OCP_AUTH=${OCP_AUTH:=""}
 export OCP_USERNAME=${OCP_USERNAME:=""}
 export OCP_PASSWORD=${OCP_PASSWORD:=""}
+export OCP_TOKEN=${OCP_TOKEN:=""}
 export OCP_CREATE_PROJECT=${OCP_CREATE_PROJECT:="true"}
 export OCP_PROJECT_NAME=${OCP_PROJECT_NAME:="cicd-pipeline"}
 export OCP_CJOC_ROUTE=${OCP_CJOC_ROUTE:="cjoc.ocp.example.com"}
@@ -120,16 +124,38 @@ if [ "$INTERACTIVE" = "true" ]; then
 		export OCP_HOST="$choice";
 	fi
 
-	read -rp "OpenShift Username: ($OCP_USERNAME): " choice;
+	read -rp "OpenShift Auth Type [userpass or token]: ($OCP_AUTH_TYPE): " choice;
 	if [ "$choice" != "" ] ; then
-		export OCP_USERNAME="$choice";
+		export OCP_AUTH_TYPE="$choice";
 	fi
 
-	read -rsp "OpenShift Password: " choice;
-	if [ "$choice" != "" ] ; then
-		export OCP_PASSWORD="$choice";
-	fi
-	echo -e ""
+    if [ $OCP_AUTH_TYPE == "userpass" ]; true
+
+        read -rp "OpenShift Username: ($OCP_USERNAME): " choice;
+        if [ "$choice" != "" ] ; then
+            export OCP_USERNAME="$choice";
+        fi
+
+        read -rsp "OpenShift Password: " choice;
+        if [ "$choice" != "" ] ; then
+            export OCP_PASSWORD="$choice";
+        fi
+        echo -e ""
+
+        OCP_AUTH="-u $OCP_USERNAME -p $OCP_PASSWORD"
+
+    fi
+
+    if [ $OCP_AUTH_TYPE == "token" ]; true
+
+        read -rp "OpenShift Token: ($OCP_TOKEN): " choice;
+        if [ "$choice" != "" ] ; then
+            export OCP_TOKEN="$choice";
+        fi
+
+        OCP_AUTH="--token=$OCP_TOKEN"
+
+    fi
 
 	read -rp "Create OpenShift Project? (true/false) ($OCP_CREATE_PROJECT): " choice;
 	if [ "$choice" != "" ] ; then
@@ -157,7 +183,7 @@ echo -e "\n "
 
 echo -e "\n================================================================================"
 echo "Log in to OpenShift..."
-oc $OC_ARG_OPTIONS login $OCP_HOST -u $OCP_USERNAME -p $OCP_PASSWORD
+oc $OC_ARG_OPTIONS login $OCP_HOST $OCP_AUTH
 
 echo -e "\n================================================================================"
 echo "Create and Set Project..."
