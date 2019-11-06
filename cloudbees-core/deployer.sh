@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ## Default variables to use
-export CBC_OCP_WORK_DIR="/tmp/cbc-ocp"
+export CBC_OCP_WORK_DIR=${CBC_OCP_WORK_DIR:="/tmp/cbc-ocp"}
 export INTERACTIVE=${INTERACTIVE:="true"}
 export OCP_HOST=${OCP_HOST:=""}
 ## userpass or token
@@ -41,16 +41,16 @@ function continueWithCJOCConfig {
     fi
 
     echo -e "\n================================================================================"
-    echo "Downloading Jenkins CLI now from CJOC..."
+    echo -e "Downloading Jenkins CLI now from CJOC..."
     curl -L -sS -o "$CBC_OCP_WORK_DIR/jenkins-cli.jar" "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/jnlpJars/jenkins-cli.jar"
 
     echo -e "\n================================================================================"
-    echo "Testing jenkins-cli..."
+    echo -e "Testing jenkins-cli...\n"
 
     java -jar $CBC_OCP_WORK_DIR/jenkins-cli.jar -s "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/" who-am-i
 
     echo -e "\n================================================================================"
-    echo "Safely restarting CJOC...for safe measure..."
+    echo -e "Safely restarting CJOC...for safe measure...\n"
 
     java -jar $CBC_OCP_WORK_DIR/jenkins-cli.jar -s "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/" safe-restart
 
@@ -59,21 +59,21 @@ function continueWithCJOCConfig {
     sleep 120
 
     echo -e "\n================================================================================"
-    echo "Pushing Plugin Catalog to CJOC..."
+    echo -e "Pushing Plugin Catalog to CJOC...\n"
 
     curl -L -sS -o $CBC_OCP_WORK_DIR/dso-ocp-workshop-plugin-catalog.json https://raw.githubusercontent.com/FierceSoftware/devsecops-workshop-wizbang/master/cloudbees-core/dso-ocp-workshop-plugin-catalog.json
 
     java -jar $CBC_OCP_WORK_DIR/jenkins-cli.jar -s "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/" plugin-catalog --put < $CBC_OCP_WORK_DIR/dso-ocp-workshop-plugin-catalog.json
 
-    echo -e "\n================================================================================"
-    echo "Pushing Team Master Recipe to CJOC..."
+    echo -e "\n\n================================================================================"
+    echo -e "Pushing Team Master Recipe to CJOC...\n"
 
     curl -L -sS -o $CBC_OCP_WORK_DIR/team-master-recipes.json https://raw.githubusercontent.com/FierceSoftware/devsecops-workshop-wizbang/master/cloudbees-core/team-master-recipes.json
 
     java -jar $CBC_OCP_WORK_DIR/jenkins-cli.jar -s "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/" team-creation-recipes --put < $CBC_OCP_WORK_DIR/team-master-recipes.json
 
-    echo -e "\n================================================================================"
-    echo "Safely restarting CJOC..."
+    echo -e "\n\n================================================================================"
+    echo -e "Safely restarting CJOC...\n"
 
     java -jar $CBC_OCP_WORK_DIR/jenkins-cli.jar -s "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/" safe-restart
 
@@ -89,27 +89,20 @@ function continueWithCJOCConfig {
     echo 'java -jar '$CBC_OCP_WORK_DIR'/jenkins-cli.jar -auth admin:'$JENKINS_ADMIN_PASS' -s "'$JENKINS_PROTOCOL_PREFIX'://'$OCP_CJOC_ROUTE'/cjoc/" teams "workshop-team" --put < '$CBC_OCP_WORK_DIR'/workshop-team.fiercesw.network.json'
 
     echo -e "\n================================================================================"
-    echo -e "\n Use the above command to create your workshop Team when the rest of your integration configuration is set - the Team Master will inherit the K8s/OCP/RocketChat configuration."
-    echo -e "\n If you set LDAP, don't log in with admin before deploying the Team Master, it will cause issues with the profiles being merged."
-    ## So we dont sleep and restart because a) why? and b) it kills things...
-    ## echo "Sleeping for 180s while TM starts...gotta get dem pluginz..."
-    ## sleep 180
-
-    ## echo -e "\n================================================================================"
-    ## echo "Safely restarting CJOC..."
-
-    ## java -jar $CBC_OCP_WORK_DIR/jenkins-cli.jar -s "$JENKINS_PROTOCOL_PREFIX://$OCP_CJOC_ROUTE/cjoc/" safe-restart
-
+    echo -e "\n Use the above command to create your workshop Team AFTER the rest of your integration configuration is set - the Team Master will inherit the K8s/OCP/RocketChat configuration."
+    echo -e "\n If you set LDAP before the Team Master, use your LDAP admin password instead of the Jenkins default generated admin password."
 
     echo -e "\n\n================================================================================"
     echo -e "Finished with deploying Cloudbees Core!\n Now feel free to finish configuring LDAP/RBAC"
 
-    echo -e "\n\n================================================================================"
-    read -p "Clean up and delete tmp directory? [N/y] " -n 1 -r
-    echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]
-    then
-        rm -rf $CBC_OCP_WORK_DIR
+    if [ "$INTERACTIVE" = "true" ]; then
+        echo -e "\n\n================================================================================"
+        read -p "Clean up and delete tmp directory? [N/y] " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]
+        then
+            rm -rf $CBC_OCP_WORK_DIR
+        fi
     fi
 }
 
