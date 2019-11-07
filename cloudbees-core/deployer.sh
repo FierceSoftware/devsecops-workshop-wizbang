@@ -11,7 +11,7 @@ export OCP_USERNAME=${OCP_USERNAME:=""}
 export OCP_PASSWORD=${OCP_PASSWORD:=""}
 export OCP_TOKEN=${OCP_TOKEN:=""}
 export OCP_CREATE_PROJECT=${OCP_CREATE_PROJECT:="true"}
-export OCP_PROJECT_NAME=${OCP_PROJECT_NAME:="cicd-pipeline"}
+export OCP_PROJECT_NAME=${OCP_PROJECT_NAME:="central-cicd"}
 export OCP_CJOC_ROUTE=${OCP_CJOC_ROUTE:="cjoc.ocp.example.com"}
 export OCP_CJOC_ROUTE_EDGE_TLS=${OCP_CJOC_ROUTE_EDGE_TLS:="true"}
 export OC_ARG_OPTIONS=${OC_ARG_OPTIONS:=""}
@@ -181,7 +181,7 @@ oc $OC_ARG_OPTIONS login $OCP_HOST $OCP_AUTH
 echo -e "\n================================================================================"
 echo "Create and Set Project..."
 if [ "$OCP_CREATE_PROJECT" = "true" ]; then
-    oc $OC_ARG_OPTIONS new-project $OCP_PROJECT_NAME --description="Central & Managed CI/CD Pipeline" --display-name="Central CI/CD"
+    oc $OC_ARG_OPTIONS new-project $OCP_PROJECT_NAME --description="Central & Managed CI/CD Pipeline" --display-name="[Shared] Central CI/CD"
     oc $OC_ARG_OPTIONS project $OCP_PROJECT_NAME
 fi
 if [ "$OCP_CREATE_PROJECT" = "false" ]; then
@@ -233,16 +233,16 @@ echo -e "Deploying Cloudbees Core...\n"
 oc $OC_ARG_OPTIONS apply -f cloudbees-core-working.yml
 
 echo -e "\n================================================================================"
-echo "Adding admin role to jenkins & cjoc service accounts..."
+echo -e "Adding admin role to jenkins & cjoc service accounts...\n"
 oc $OC_ARG_OPTIONS policy add-role-to-user admin system:serviceaccount:$OCP_PROJECT_NAME:jenkins
 oc $OC_ARG_OPTIONS policy add-role-to-user admin system:serviceaccount:$OCP_PROJECT_NAME:cjoc
 
 echo -e "\n================================================================================"
-echo "Sleeping for 120s while Cloudbees Core deploys..."
+echo -e "Sleeping for 120s while Cloudbees Core deploys...\n"
 sleep 120
 
 echo -e "\n================================================================================"
-echo "Sending plugin stuffer to CJOC pod..."
+echo -e "Sending plugin stuffer to CJOC pod..."
 oc $OC_ARG_OPTIONS exec cjoc-0 -- curl -L -sS -o /var/jenkins_home/cjoc-plugin-stuffer.sh https://raw.githubusercontent.com/FierceSoftware/devsecops-workshop-wizbang/master/cloudbees-core/cjoc-plugin-stuffer.sh
 oc $OC_ARG_OPTIONS exec cjoc-0 -- chmod +x /var/jenkins_home/cjoc-plugin-stuffer.sh
 oc $OC_ARG_OPTIONS exec cjoc-0 -- /var/jenkins_home/cjoc-plugin-stuffer.sh openshift-client workflow-scm-step workflow-api jsch durable-task workflow-job workflow-multibranch branch-api workflow-support pipeline-stage-step pipeline-input-step pipeline-graph-analysis pipeline-milestone-step pipeline-rest-api pipeline-build-step momentjs handlebars pipeline-stage-view workflow-durable-task-step pipeline-model-api pipeline-model-extensions pipeline-model-definition pipeline-model-declarative-agent pipeline-stage-tags-metadata git-server git git-client workflow-cps-global-lib docker-workflow rocketchatnotifier lockable-resources workflow-basic-steps workflow-cps openshift-sync openshift-pipeline
