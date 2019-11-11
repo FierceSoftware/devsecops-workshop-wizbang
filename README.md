@@ -21,14 +21,15 @@
 2. Deploy Red Hat Identity Management for LDAP
 3. Deploy GitLab
 4. Run workshop-ocp-provisioner.sh in order to provision OCP Namespaces, Manifests, and Objects such as CloudBees, Jenkins Agents, and centralized Rocket.Chat, Sonatype Nexus IQ Platform, SonarQube, and Eclipse Che.
-5. ???????
-6. Hope it works
+5. Do post-config for integrations such as LDAP and Team Masters
+6. ???????
+7. Hope it works - LUH-KEY CHANZ
 
 ## Requirements
 
 ### Red Hat OpenShift Container Platform
 
-Quickly, let's get this outta the way: 
+Quickly, let's get this outta the way:
 
 *"Can you use OKD/Minishift instead of Red Hat OCP?"*
 
@@ -144,7 +145,7 @@ If using GitLab EE you may have the deployer also copy over your License file.  
 
 Additionally, if you'd like you can also pre-provision each user a series of repositories if you'd like.
 In order to pre-provision repositories for users, you'll need to first create a [Personal Access Token in GitHub](https://github.com/settings/tokens).  Then add that token and the list of repositories from GitHub you'd like to clone into each student user, as defined in the vars file ```{example_}aws-deploy-gitlab-vars.yaml```
-Currently, the pre-provisioner is disabled because GitLab does not auto-sync users from LDAP until they log in at least once via the WebUI...yes, that means 
+Currently, the pre-provisioner is disabled because GitLab does not auto-sync users from LDAP until they log in at least once via the WebUI...yes, that means
 
 ```
 $ cd ansible-playbooks/
@@ -187,6 +188,11 @@ $ ./shared-resource-project.provisioner.sh
 ```
 
 Answer the prompts, and it'll deploy the resources.  Then log into OCP, and you should be able to "Select from Project", navigate to the shared project, and order from its catalog of Templates.
+
+# Tested deployment
+
+- AWS, us-east-1 due to needing 3 AZs
+- OpenShift 3.11, AWS Quickstart CloudFormation template
 
 ***
 
