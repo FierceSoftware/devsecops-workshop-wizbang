@@ -34,6 +34,9 @@
                 "pipeline-stage-step": {
                     "url" : "https://updates.jenkins.io/latest/pipeline-stage-step.hpi"
                 },
+                "pipeline-utility-steps": {
+                    "url" : "https://updates.jenkins.io/latest/pipeline-utility-steps.hpi"
+                },
                 "pipeline-input-step": {
                     "url" : "https://updates.jenkins.io/latest/pipeline-input-step.hpi"
                 },
