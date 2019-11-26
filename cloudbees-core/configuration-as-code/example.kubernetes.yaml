@@ -1,0 +1,65 @@
+jenkins:
+  clouds:
+  - kubernetes:
+      connectTimeout: 5
+      containerCapStr: "10"
+      credentialsId: "oc-generic-token"
+      jenkinsUrl: "http://cjoc.CJOC_NAMESPACE_HERE.svc.cluster.local/cjoc"
+      maxRequestsPerHostStr: "32"
+      name: "kubernetes"
+      readTimeout: 15
+      templates:
+      - containers:
+        - args: "^${computer.jnlpmac} ^${computer.name}"
+          image: "registry.access.redhat.com/openshift3/jenkins-slave-maven-rhel7"
+          livenessProbe:
+            failureThreshold: 0
+            initialDelaySeconds: 0
+            periodSeconds: 0
+            successThreshold: 0
+            timeoutSeconds: 0
+          name: "jnlp"
+          workingDir: "/tmp"
+        hostNetwork: false
+        label: "maven"
+        name: "maven"
+        workspaceVolume:
+          emptyDirWorkspaceVolume:
+            memory: false
+        yamlMergeStrategy: "override"
+      - containers:
+        - args: "^${computer.jnlpmac} ^${computer.name}"
+          image: "registry.access.redhat.com/openshift3/jenkins-agent-nodejs-8-rhel7"
+          livenessProbe:
+            failureThreshold: 0
+            initialDelaySeconds: 0
+            periodSeconds: 0
+            successThreshold: 0
+            timeoutSeconds: 0
+          name: "jnlp"
+          workingDir: "/tmp"
+        hostNetwork: false
+        label: "nodejs"
+        name: "nodejs"
+        workspaceVolume:
+          emptyDirWorkspaceVolume:
+            memory: false
+        yamlMergeStrategy: "override"
+      - containers:
+        - args: "^${computer.jnlpmac} ^${computer.name}"
+          image: "registry.hub.docker.com/kenmoini/jenkins-agent-ansible"
+          livenessProbe:
+            failureThreshold: 0
+            initialDelaySeconds: 0
+            periodSeconds: 0
+            successThreshold: 0
+            timeoutSeconds: 0
+          name: "jnlp"
+          workingDir: "/tmp"
+        hostNetwork: false
+        label: "ansible"
+        name: "ansible"
+        workspaceVolume:
+          emptyDirWorkspaceVolume:
+            memory: false
+        yamlMergeStrategy: "override"

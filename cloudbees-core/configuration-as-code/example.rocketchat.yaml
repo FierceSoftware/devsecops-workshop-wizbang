@@ -1,0 +1,8 @@
+unclassified:
+  rocketChatNotifier:
+    buildServerUrl: "/"
+    channel: "#devsecops-workshop"
+    password: "RC_PASSWORD"
+    rocketServerUrl: "EXTERNAL_ROCKET_CHAT_FQDN"
+    trustSSL: false
+    username: "RC_USERNAME"

@@ -1,0 +1,28 @@
+unclassified:
+  globalPluginConfiguration:
+    buildConfigListInterval: 300
+    buildListInterval: 300
+    configMapListInterval: 300
+    credentialsId: "oc-sync-token"
+    enabled: true
+    foldersEnabled: true
+    imageStreamListInterval: 300
+    namespace: "CJOC_NAMESPACE_HERE EXTRA_OC_SYNC_NAMESPACES_HERE"
+    secretListInterval: 300
+  kubernetesMasterProvisioning:
+    clusterEndpoints:
+    - credentialsId: "oc-generic-token"
+      id: "default"
+      jenkinsUrl: "http://cjoc.CJOC_NAMESPACE_HERE.svc.cluster.local/cjoc"
+      name: "kubernetes"
+    cpus: 1.0
+    disk: 50
+    javaOptions: "-XshowSettings:vm -XX:MaxRAMFraction=1 -XX:+AlwaysPreTouch -XX:+UseG1GC\
+      \ -XX:+ExplicitGCInvokesConcurrent -XX:+ParallelRefProcEnabled -XX:+UseStringDeduplication\
+      \ -Dhudson.slaves.NodeProvisioner.initialDelay=0 -Dhudson.DNSMultiCast.disabled=true"
+    livenessInitialDelaySeconds: 300
+    livenessPeriodSeconds: 10
+    livenessTimeoutSeconds: 10
+    memory: 3072
+    ratio: 0.7
+    terminationGracePeriodSeconds: 1200
