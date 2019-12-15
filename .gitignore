@@ -1,11 +1,17 @@
 ansible-playbooks/vars/aws-deploy-gitlab-vars.yaml
 ansible-playbooks/vars/aws-deploy-rh-idm-vars.yaml
 
+cloudbees-core/working-configmap-jcasc-kubernetes-plugin.yaml
+cloudbees-core/working-configmap-jcasc-openshift-plugin.yaml
+cloudbees-core/working-configmap-jcasc-rocketchat-plugin.yaml
 cloudbees-core/vars.sh
-cloudbees-core/configuration-as-code/kubernetes.yaml
-cloudbees-core/configuration-as-code/openshift.yaml
-cloudbees-core/configuration-as-code/rocketchat.yaml
-cloudbees-core/groovy-scripts/create-credentials.groovy
-cloudbees-core/groovy-scripts/configure-ldap.groovy
+cloudbees-core/configuration-as-code/working-kubernetes.yaml
+cloudbees-core/configuration-as-code/working-openshift.yaml
+cloudbees-core/configuration-as-code/working-rocketchat.yaml
+cloudbees-core/groovy-scripts/working-create-credentials.groovy
+cloudbees-core/groovy-scripts/working-create-generic-credentials.groovy
+cloudbees-core/groovy-scripts/working-create-oc-client-credentials.groovy
+cloudbees-core/groovy-scripts/working-create-oc-sync-credentials.groovy
+cloudbees-core/groovy-scripts/working-configure-ldap.groovy
 
 shared-resources/vars.sh

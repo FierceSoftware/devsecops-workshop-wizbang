@@ -4,6 +4,15 @@ Want to run CloudBees Core on OpenShift?  No problem!
 
 Want it to integrate into OpenShift just like the built-in Jenkins?  Oh...okay...yeah, sure...kind of a pain though...
 
+Thankfully, this deployer allows you to automatically:
+
+- Deploy the latest CloudBees Core on OpenShift
+- Add all the needed plugins to work tightly with OpenShift Builds
+- Configure LDAP from Red Hat IDM/FreeIPA
+- Configure Kubernetes Cloud Plugin for deploying to OpenShift
+- Configure OpenShift Client and Sync plugins
+- Configure Rocket.Chat plugin
+
 ## Introduction
 
 When running Red Hat OpenShift Container Platform you can quickly deploy OSS Jenkins as a CI/CD platform and it beautifully integrates with OCP's Build and Pipeline objects, the OpenShift DSL is available, log into Jenkins with the OCP OAuth provider, it's simply great *chefs kiss*
@@ -12,14 +21,14 @@ Except, Red Hat unfortunately does not provide the best Jenkins.  It is out-date
 
 CloudBees Core is a managed, scalable, secure Jenkins and deploying on OCP is very easy.  Integrating it into OCP as the built-in Jenkins, that's a different story.
 
-## {1}. Deployment - Automated-ish
+## {1}. Deployment - Automated
 
-The deployment script ```./deploy.sh``` can also take preset environmental variables to provision without prompting the user.  To do so, copy over the ```example.vars.sh``` file, set the variables, source and run the deployer.
+The deployment script ```./deploy.sh``` can also take preset environmental variables to provision without prompting the user.  To do so, copy over the ```example.vars.sh``` file, set the variables, run the deployer which will auto-load a ```vars.sh``` file when it exists.
 
 ```bash
 $ cp example.vars.sh vars.sh
 $ vim vars.sh
-$ source ./vars.sh && ./deployer.sh
+$ ./deployer.sh
 ```
 
 ## {1}. Deployment - Interactive
@@ -45,9 +54,13 @@ The first part will deploy the OpenShift manifests needed to run CloudBees Core.
 6. Click ***Save*** and ***Finish***
 7. Next, navigate to ***Manage Jenkins > Configure Global Security*** then scroll down to ***CSRF Protection > Prevent Cross Site Request Forgery exploits*** and uncheck the box - this is only until the rest of the system is configured and the Team Master is deployed.  Jenkins has issues behind a LoadBalancer.
 8. Click ***Apply***, reload the page, and then click ***Save***
-9. Return to the terminal with your waiting deployment script, press ***Y*** to continue.
+9. Next, navigate to ***Manage Jenkins > Beekeeper Upgrade Assistant > CAP Configuration*** and uncheck the box **"Enroll this instance in the CloudBees Assurance Program"**.
+10. Click ***Save***
+11. Return to the terminal with your waiting deployment script, press ***Y*** to continue.
 
-We now have the required manual steps done in order to proceed with the deployer.  Please continue with the deployment script and then configure LDAP/RBAC afterwards.  Just go back to the deployer script, press ***Y***, wait a few seconds, then go about configuring LDAP below.  You may think *Well, I'll go ahead and knock out the LDAP...* ***NO!*** STOP IT!  Doing so will break the script as the jenkins-cli needs the password and merging the LDAP user messes that up.
+From this point out, it's fully automated thanks for a number of Groovy scripts and Jenkins Configuration as Code YAML templates.
+
+***NOTE:*** If you want to prevent all LDAP users from having Admin-level access to CJOC and the Team Masters, continue to configuring ***#5 LDAP with RBAC*** below.
 
 ### 3. Setting up LDAP - Stuffing Certificates
 

@@ -7,6 +7,7 @@ unclassified:
     enabled: true
     foldersEnabled: true
     imageStreamListInterval: 300
+    jobNamePattern: "*"
     namespace: "CJOC_NAMESPACE_HERE EXTRA_OC_SYNC_NAMESPACES_HERE"
     secretListInterval: 300
   kubernetesMasterProvisioning:
