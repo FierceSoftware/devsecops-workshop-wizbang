@@ -90,5 +90,9 @@ while [[ $BATCH_USER_COUNTER -le $BATCH_USER_COUNT ]]; do
   echo -e "\nEnabling ${BATCH_USER_PREFIX}${BATCH_USER_COUNTER}${BATCH_USER_SUFFIX}...\n"
   
   ipa user-enable "${BATCH_USER_PREFIX}${BATCH_USER_COUNTER}${BATCH_USER_SUFFIX}"
+  
+  echo -e "\nSetting Password Expiration for a few years out on ${BATCH_USER_PREFIX}${BATCH_USER_COUNTER}${BATCH_USER_SUFFIX}...\n"
+  
+  ipa user-mod "${BATCH_USER_PREFIX}${BATCH_USER_COUNTER}${BATCH_USER_SUFFIX}" --setattr krbPasswordExpiration=20300420162000Z
 
 done
